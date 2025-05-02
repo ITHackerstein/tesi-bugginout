@@ -1,0 +1,80 @@
+%! TeX program = lualatex
+
+% NOTE: Use twoside for the final print and oneside for the digital version
+\documentclass[a4paper,oneside,12pt]{report}
+\usepackage[italian]{babel}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usepackage{hyphenat}
+\hyphenation{mate-mati-ca recu-perare}
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,
+	allcolors=black
+}
+\usepackage{parskip}
+
+\usepackage{tocloft}
+\renewcommand{\cftchapdotsep}{\cftdotsep}
+
+\linespread{1.25}
+
+\makeatletter
+\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else
+	\hbox{}
+	\vspace*{\fill}
+	\vspace{\fill}
+	\thispagestyle{empty}
+	\newpage
+	\if@twocolumn\hbox{}\newpage\fi\fi\fi}
+\makeatother
+
+\begin{document}
+	\begin{titlepage}
+		\begin{tikzpicture}[remember picture,overlay]
+			\centering
+			\node[yshift=-6 cm] (logo) at (current page.north) {\includegraphics[width=0.75\linewidth]{figures/uniba.jpg}};
+			\node[text width=50em,yshift=0.25cm, align = center, below = of logo](dipartimento){\normalsize {Dipartimento di Informatica}};
+			\node[text width=40em, align = center, yshift=.55cm,below = of dipartimento](course){\normalsize {Corso di Laurea in Informatica}};
+			\node[text width=35em,align = center,  yshift=1.2cm,below = of course](line){\par\noindent\rule{\textwidth}{0.4pt}};
+			\node[text width=40em, align = center, yshift=.55cm,below = of line](lia){\normalsize {Tesi di Laurea \\ in \\ Linguaggi di Programmazione}};
+
+			\node[text width=40em, align = center, yshift=-0.5cm,below = of lia](title){\parbox{12cm}{\centering {\bfseries \fontsize{20pt}{20pt}\selectfont {BugginOut}} \\ \vspace{0.5cm} {\fontsize{16pt}{16pt}\selectfont {Design e implementazione di un linguaggo di programmazione}}\par}};
+
+			\node[text width=35em, align = left, yshift=-1cm,below = of title](relatoretit){\normalsize \textbf{Relatore} };
+			\node[text width=35em, align = left, yshift=1cm,below = of relatoretit](relatore){\large {Prof. Pasquale Lops}};
+
+			\node[text width=35em, align = right, yshift=-1cm,below = of title](candidatetit){\normalsize \textbf{Laureando}};
+			\node[text width=35em, align = right, yshift=1cm,below = of candidatetit](candidate){\large {Davide Carella}};
+
+			\node[text width=35em,align = center,  yshift= -3cm,below = of candidate](line2){\par\noindent\rule{\textwidth}{0.4pt}};
+			\node[text width=50em, align = center, yshift=0.5cm,below = of line2](year){\large {Anno accademico: 2024 - 2025}};
+		\end{tikzpicture}
+	\end{titlepage}
+
+	\pagenumbering{roman}
+
+	\cleardoublepage
+	\addcontentsline{toc}{chapter}{Abstract}
+	\include{Abstract}
+	\cleardoublepage
+	\addcontentsline{toc}{chapter}{Indice}
+	\tableofcontents
+	\cleardoublepage
+
+	\pagenumbering{arabic}
+	\setcounter{page}{1}
+
+	\addcontentsline{toc}{chapter}{Introduzione}
+	\include{Introduzione}
+	\include{Design_del_linguaggio}
+	\include{Flusso_di_compilazione}
+	\include{Architettura_del_compilatore}
+	\include{Alcuni_esempi}
+	\include{Conclusioni}
+
+	\addcontentsline{toc}{chapter}{Bibliografia}
+	\bibliographystyle{plain}
+	\bibliography{Bibliography}
+\end{document}
