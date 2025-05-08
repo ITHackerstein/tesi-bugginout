@@ -3,32 +3,26 @@
 \chapter*{Introduzione}
 \label{chap:introduzione}
 
-% Idee:
-%  * Ispirazione dietro al nome (breve, se si riesce)
-%  * La motivazione dietro al linguaggio
-%  * Obiettivi del linguaggio
-%  * Struttura della tesi
+BugginOut \`e un linguaggio di programmazione \textit{general-purpose} transpilato in C++ e sviluppato in C++ da zero. Il progetto nasce dall'analisi di linguaggi esistenti, dai quali sono state reinterpretate le funzionalit\`a ritenute pi\`u efficaci, con l'obiettivo di creare un linguaggio nuovo sintatticamente semplice, moderno e leggibile.
 
-BugginOut \`e un linguaggio di programmazione \textit{general-purpose} transpilato in C++ scritto in C++ da zero. Nasce ispirandosi ad altri linguaggi di programmazione prendendone le funzionalit\`a ritenute pi\`u utile per crearne uno nuovo con l'obiettivo di essere semplice, moderno e facile da leggere.
-
-% TODO: Inserisci qua l'ispirazione al nome
+Il nome BugginOut \`e un gioco di parole sul termine \textit{bug} e il personaggio omonimo \textit{Buggin' Out} del film \textit{Do The Right Thing} di Spike Lee. Questo, oltre a essere un omaggio al film, rappresenta anche il concetto di \textit{debugging} e la ricerca di un linguaggio che possa aiutare i programmatori a scrivere codice pi\`u facilmente e senza errori.
 
 Nel capitolo \ref{chap:flusso-di-compilazione} si analizzano tutte le fasi che portano un programma scritto in BugginOut (solitamente un file con estensione \texttt{.bo}), in particolare:
 \begin{itemize}
-	\item nel paragrafo \ref{sec:analisi-lessicale} si esamina la prima fase di compilazione, ovvero l'analisi lessicale del codice che consiste nella trasformazione del programma (un insieme di caratteri) in un insieme di \textit{token}, la parte atomica di ogni programma;
-	\item nel paragrafo \ref{sec:analisi-grammaticale} si esamina l'analisi grammaticale del codice, ovvero come l'insieme di \textit{token} prodotto dall'analisi lessicale viene trasformato in un \textit{AST} (\textit{Abstract Syntax Tree}), un albero che rappresenta la struttura di un programma (o una sua parte) senza, per\`o, le informazioni contestuali;
-	\item nel paragrafo \ref{sec:analisi-semantica} si esamina l'analisi semantica del codice, ovvero come l'AST generato dall'analisi grammaticale viene arricchito con informazioni contestuali come, ad esempio, variabili e funzioni dichiarate e i tipi utilizzati nel programma;
-	\item nel paragrafo \ref{sec:generazione-del-codice} si esamina la fase finale della compilazione, ovvero la generazione del codice C++ finale che viene poi compilato, da un compilatore C++ gi\`a esistente, nell'eseguibile finale del programma.
+	\item nel paragrafo \ref{sec:analisi-lessicale} si esamina la prima fase di compilazione: l'analisi lessicale del codice che consiste nella trasformazione del programma (un insieme di caratteri) in un insieme di \textit{token} (la parte atomica di ogni programma);
+	\item nel paragrafo \ref{sec:analisi-grammaticale} si esamina l'analisi grammaticale del codice: la trasformazione dell'insieme di \textit{token} prodotto dall'analisi lessicale in un \textit{AST} (\textit{Abstract Syntax Tree}), un albero che rappresenta la struttura di un programma (o una sua parte) senza, per\`o, le informazioni contestuali;
+	\item nel paragrafo \ref{sec:analisi-semantica} si esamina l'analisi semantica del codice: l'arricchimento dell'AST generato dall'analisi grammaticale viene con informazioni contestuali come, ad esempio, variabili e funzioni dichiarate e i tipi utilizzati nel programma;
+	\item nel paragrafo \ref{sec:generazione-del-codice} si esamina la fase finale della compilazione: la generazione del codice C++ finale che viene poi compilato, da un compilatore C++ gi\`a esistente, nell'eseguibile finale del programma.
 \end{itemize}
 Nel capitolo \ref{chap:architettura-del-compilatore} si analizzano nel dettaglio le astrazioni utilizzate per realizzare il compilatore, tra cui:
 \begin{itemize}
-	\item il \texttt{Lexer}, il cui compito \`e generare dei \texttt{Token} su richiesta a partire da un programma;
-	\item il \texttt{Parser}, il cui compito \`e generare un'\texttt{AST} ovvero una gerarchia di \texttt{Node}, la classe madre di ogni nodo dell'albero;
-	\item il \texttt{Typechecker}, il cui compito \`e controllare il corretto utilizzo di tipi, variabili e funzioni nel programma per poi generare un \texttt{CheckedAST};
-	\item il \texttt{Transpiler}, il cui compito \`e trasformare il \texttt{CheckedAST} nel codice C++ finale.
+	\item il \texttt{Lexer} genera dei \texttt{Token} su richiesta a partire da un programma;
+	\item il \texttt{Parser} genera un'\texttt{AST} ovvero una gerarchia di \texttt{Node}, la classe madre di ogni nodo dell'albero;
+	\item il \texttt{Typechecker} controlla il corretto utilizzo di tipi, variabili e funzioni nel programma per poi generare un \texttt{CheckedAST};
+	\item il \texttt{Transpiler} trasforma il \texttt{CheckedAST} nel codice C++ finale.
 \end{itemize}
-Come \`e possibile osservare, c'\`e una corrispondenza uno-a-uno tra ognuna di queste astrazioni e le fasi che verranno affrontate nel \ref{chap:flusso-di-compilazione}.
+Le astrazioni introdotte in questo capitolo trovano una corrispondenza uno-a-uno con le fasi del flusso di compilazione descritte nel capitolo \ref{chap:flusso-di-compilazione}, poiché esse rappresentano l’implementazione concreta di ciascuna di tali fasi.
 
-Nel capitolo \ref{chap:design-del-linguaggio} si analizzano le scelte progettuali fatte per il linguaggio, in particolare se ne analizzer\`a la sintassi, i tipi di dato disponibili e le strutture presenti per il controllo del flusso.
+Nel capitolo \ref{chap:design-del-linguaggio} vengono delineate le scelte progettuali del linguaggio, in particolare se ne analizzer\`a la sintassi, i tipi di dato disponibili e le strutture presenti per il controllo del flusso, con riferimento costante alla sua grammatica formale.
 
-Nel capitolo \ref{chap:alcuni-esempi} si analizzano alcuni algoritmi implementati in BugginOut per dimostrare l'espressivit\`a e infine nel \ref{chap:conclusioni} si esaminano i limiti del linguaggio allo stato attuale, i possibili sviluppi futuri e si tirano le somme sul lavoro svolto.
+Nel capitolo \ref{chap:alcuni-esempi} si analizzano alcuni algoritmi implementati in BugginOut per dimostrarne l'espressivit\`a e, infine, nel capitolo \ref{chap:conclusioni} si esaminano i limiti del linguaggio allo stato attuale, i possibili sviluppi futuri e si giunge a una valutazione complessiva del lavoro svolto.
