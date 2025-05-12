@@ -42,12 +42,6 @@ Da \cite{alfred2007compilers}:
 	\colplacechunks
 \end{parcolumns}
 
-Nella fase di analisi lessicale si alternano due operazioni:
-\begin{itemize}
-	\item definita da \cite{alfred2007compilers} come \emph{scanning}, si ignorano i caratteri che non sono significativi per il linguaggio (spazi bianchi e \emph{commenti});
-	\item definita da \cite{alfred2007compilers} come \emph{lexical analysis}, \`e la parte pi\`u complessa in cui si producono i token.
-\end{itemize}
-
 In BugginOut, i token utilizzati sono diversi, alcuni dei quali sono:
 \begin{table}[H]
 	\begin{tabularx}{\textwidth}{X|X|X}
@@ -71,6 +65,12 @@ In BugginOut, i token utilizzati sono diversi, alcuni dei quali sono:
 
 \footnotetext{In BugginOut \`e possibile utilizzare i numeri in notazione binari, ottale ed esadecimale. Per esempio \texttt{0b101} \`e un numero binario, \texttt{0o127} \`e un numero ottale e \texttt{0x1A} \`e un numero esadecimale. Inoltre possono essere seguiti da un suffisso per indicarne il tipo. Il pattern per entrambi \`e stato omesso in quanto non rilevante per l'esempio.}
 
+Nella fase di analisi lessicale si alternano due operazioni:
+\begin{itemize}
+	\item definita da \cite{alfred2007compilers} come \emph{scanning}, si ignorano i caratteri che non sono significativi per il linguaggio (spazi bianchi e \emph{commenti});
+	\item definita da \cite{alfred2007compilers} come \emph{lexical analysis}, \`e la parte pi\`u complessa in cui si producono i token.
+\end{itemize}
+
 Quando pi\`u di un lessema pu\`o essere riconosciuto da un pattern, l'analizzatore lessicale inserisce nel valore delle informazioni aggiuntive utili alle fasi successive di compilazione. Ad esempio, nel caso di un numero, il valore \`e il numero stesso. Ad esempio, facendo riferimento all'esempio \ref{fig:bugginout-example-tokens}, il token \texttt{IntegerLiteral} conterrebbe come valore \texttt{123}.
 
 \`E importante osservare che ci\`o che influenzer\`a le decisioni di analisi grammaticale del compilatore \`e il nome del token e non il suo valore che, invece, viene usato per la traduzione dei token.
@@ -88,12 +88,10 @@ Per completezza, di seguito verranno riporati tutti i token definiti in BugginOu
 	\endfirsthead
 
 	\hline
-	\hline
 	\multicolumn{1}{c|}{\textsc{Token}} & \multicolumn{1}{c|}{\textsc{Pattern}} \\
 	\hline
 	\endhead
 
-	\hline
 	\hline
 	\endfoot
 
@@ -137,34 +135,34 @@ Per completezza, di seguito verranno riporati tutti i token definiti in BugginOu
 	\texttt{AsteriskEquals} & \texttt{*=} \\ \hline
 	\texttt{At} & \texttt{@} \\ \hline
 	\texttt{BinaryLiteral} & \texttt{0b[01]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?}  \\ \hline
-	\texttt{CharLiteral} & \texttt{\textquotesingle([\textasciicircum \textquotesingle]|\textbackslash \textquotesingle |\textbackslash n|\textbackslash r|\textbackslash t|\textbackslash\textbackslash|\textbackslash 0|\textbackslash x[0-7][0-9a-fA-F])\textquotesingle} \\ \hline
-	\texttt{Circumflex} & \texttt{\textasciicircum} \\ \hline
-	\texttt{CircumflexEquals} & \texttt{\textasciicircum=} \\ \hline
+	\texttt{CharLiteral} & \texttt{\textquotesingle([\textasciicircum \textquotesingle \textbackslash \textbackslash]|\textbackslash \textbackslash \textquotesingle |\textbackslash \textbackslash n|\textbackslash \textbackslash r|\textbackslash \textbackslash t|\textbackslash\textbackslash\textbackslash\textbackslash|\textbackslash \textbackslash 0|\textbackslash \textbackslash x[0-7][0-9a-fA-F])\textquotesingle} \\ \hline
+	\texttt{Circumflex} & \texttt{\textbackslash\textasciicircum} \\ \hline
+	\texttt{CircumflexEquals} & \texttt{\textbackslash\textasciicircum=} \\ \hline
 	\texttt{Colon} & \texttt{:} \\ \hline
 	\texttt{Comma} & \texttt{,} \\ \hline
 	\texttt{DecimalLiteral} & \texttt{[0-9]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?} \\ \hline
-	\texttt{Dot} & \texttt{.} \\ \hline
-	\texttt{DotDotEquals} & \texttt{..=} \\ \hline
-	\texttt{DotDotLessThan} & \texttt{..<} \\ \hline
+	\texttt{Dot} & \texttt{\textbackslash .} \\ \hline
+	\texttt{DotDotEquals} & \texttt{\textbackslash .\textbackslash .=} \\ \hline
+	\texttt{DotDotLessThan} & \texttt{\textbackslash .\textbackslash .<} \\ \hline
 	\texttt{DoubleAmpersand} & \texttt{\&\&} \\ \hline
 	\texttt{DoubleAmpersandEquals} & \texttt{\&\&=} \\ \hline
 	\texttt{DoubleEquals} & \texttt{==} \\ \hline
-	\texttt{DoublePipe} & \texttt{||} \\ \hline
-	\texttt{DoublePipeEquals} & \texttt{||=} \\ \hline
+	\texttt{DoublePipe} & \texttt{\textbackslash |\textbackslash |} \\ \hline
+	\texttt{DoublePipeEquals} & \texttt{\textbackslash |\textbackslash |=} \\ \hline
 	\texttt{EndOfFile}\footnotemark & \\ \hline
 	\texttt{Equals} & \texttt{=} \\ \hline
 	\texttt{ExclamationMark} & \texttt{!} \\ \hline
 	\texttt{ExclamationMarkEquals} & \texttt{!=} \\ \hline
-	\texttt{FloatLiteral} & \texttt{[0-9]+.[0-9]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?} \\ \hline
+	\texttt{FloatLiteral} & \texttt{[0-9]+\textbackslash.[0-9]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?} \\ \hline
 	\texttt{GreaterThan} & \texttt{>} \\ \hline
 	\texttt{GreaterThanEquals} & \texttt{>=} \\ \hline
 	\texttt{HexadecimalLiteral} & \texttt{0x[0-9a-fA-F]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?} \\ \hline
 	\texttt{Identifier} & \texttt{[a-zA-Z\_\$][a-zA-Z\_\$0-9]*} \\ \hline
-	\texttt{LeftCurlyBracket} & \texttt{\textbackslash \{} \\ \hline
+	\texttt{LeftCurlyBracket} & \texttt{\{} \\ \hline
 	\texttt{LeftParenthesis} & \texttt{\textbackslash (} \\ \hline
 	\texttt{LeftShift} & \texttt{<<} \\ \hline
 	\texttt{LeftShiftEquals} & \texttt{<<=} \\ \hline
-	\texttt{LeftSquareBracket} & \texttt{\textbackslash [} \\ \hline
+	\texttt{LeftSquareBracket} & \texttt{\textbackslash \char"5B} \\ \hline
 	\texttt{LessThan} & \texttt{<} \\ \hline
 	\texttt{LessThanEquals} & \texttt{<=} \\ \hline
 	\texttt{Minus} & \texttt{-} \\ \hline
@@ -173,12 +171,12 @@ Per completezza, di seguito verranno riporati tutti i token definiti in BugginOu
 	\texttt{OctalLiteral} & \texttt{0o[0-7]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?} \\ \hline
 	\texttt{Percent} & \texttt{\%} \\ \hline
 	\texttt{PercentEquals} & \texttt{\%=} \\ \hline
-	\texttt{Pipe} & \texttt{|} \\ \hline
-	\texttt{PipeEquals} & \texttt{|=} \\ \hline
+	\texttt{Pipe} & \texttt{\textbackslash |} \\ \hline
+	\texttt{PipeEquals} & \texttt{\textbackslash |=} \\ \hline
 	\texttt{Plus} & \texttt{+} \\ \hline
 	\texttt{PlusEquals} & \texttt{+=} \\ \hline
 	\texttt{PlusPlus} & \texttt{++} \\ \hline
-	\texttt{RightCurlyBracket} & \texttt{\textbackslash \}} \\ \hline
+	\texttt{RightCurlyBracket} & \texttt{\}} \\ \hline
 	\texttt{RightParenthesis} & \texttt{\textbackslash )} \\ \hline
 	\texttt{RightShift} & \texttt{>>} \\ \hline
 	\texttt{RightShiftEquals} & \texttt{>>=} \\ \hline
@@ -186,14 +184,16 @@ Per completezza, di seguito verranno riporati tutti i token definiti in BugginOu
 	\texttt{Semicolon} & \texttt{;} \\ \hline
 	\texttt{Solidus} & \texttt{/} \\ \hline
 	\texttt{SolidusEquals} & \texttt{/=} \\ \hline
-	\texttt{StringLiteral} & \\ \hline
-	\texttt{Tilde} & \texttt{\textasciitilde} \\ \hline
+	\texttt{StringLiteral} & \texttt{\textquotedbl ([\textasciicircum \textquotedbl \textbackslash \textbackslash]|\textbackslash \textbackslash \textquotedbl|\textbackslash \textbackslash n|\textbackslash \textbackslash r|\textbackslash \textbackslash t|\textbackslash \textbackslash \textbackslash \textbackslash|\textbackslash \textbackslash 0|\textbackslash \textbackslash x[0-7][0-9a-fA-F])*\textquotedbl} \\ \hline
+	\texttt{Tilde} & \texttt{\textasciitilde}
 \end{xltabular}
 
 \footnotetext{Il token \texttt{EndOfFile} non ha un pattern associato in quanto viene generato quando l'analizzatore lessicale ha terminato di analizzare il file sorgente.}
 
 \section{Analisi grammaticale}
 \label{sec:analisi-grammaticale}
+
+
 
 \section{Analisi semantica}
 \label{sec:analisi-semantica}
