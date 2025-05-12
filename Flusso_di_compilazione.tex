@@ -3,8 +3,194 @@
 \chapter{Flusso di compilazione}
 \label{chap:flusso-di-compilazione}
 
+Nel seguente capitolo si affronteranno, separatamente, le fasi di compilazione di un programma scritto in BugginOut. \`E bene notare che ciascuna di queste fasi prende in ingresso il risultato della fase precedente.
+
 \section{Analisi lessicale}
 \label{sec:analisi-lessicale}
+
+Da \cite{alfred2007compilers}:
+
+\begin{parcolumns}[colwidths={1=0.45\textwidth,2=0.45\textwidth},rulebetween=true,nofirstindent=true]{2}
+	% LTeX: language=en_us
+	\colchunk{
+		\leftskip=1em
+		``The main task of the lexical analyzer is to read the input characters of the \emph{source} program, group them into \emph{lexemes}, and produce as output a sequence of \emph{tokens} for each lexeme in the source program.
+
+		[\ldots]
+
+		When discussing lexical analysis, we use three related but distinct terms:
+		\begin{itemize}
+			\item A \emph{token} is a pair consisting of a token \emph{name} and an optional attribute \emph{value}. The token name is an abstract symbol representing a kind of lexical unit, e.g., a particular keyword, or a sequence of input characters denoting an identifier. [\ldots]
+			\item A \emph{pattern} is a description of the form that the lexemes of a token may take. In the case of a kewyord as a token, the pattern is just the sequence of characters that form the keyword. For identifiers and some other tokens, the pattern is a more complex structure that is matched by many strings.
+			\item A \emph{lexeme} is a sequence of characters in the source program that matches the pattern for a token and is identified by the lexical analyzer as an instance of that token.
+		\end{itemize}
+	}
+	% LTeX: language=it
+	\colchunk{
+		\leftskip=1em
+		``Il compito principale di un analizzatore lessicale \`e la lettura dei caratteri di input del programma \emph{sorgente}, raggrupparli in \emph{lessemi} e produrre, come risultato, una sequenza di \emph{token} per ogni lessema del programma sorgente.
+
+		[\ldots]
+
+		Durante la discussione dell'analisi lessicale, si usano tre legati ma distinti termini:
+		\begin{itemize}
+			\item Un \emph{token} \`e una coppia costituita di un \emph{nome} e un \emph{valore} opzionale. Il nome \`e un simbolo astratto che rappresenta il tipo di unit\`a lessicale, ad esempio, una particolare parola chiave oppure una sequenza di caratteri che denota un identificatore. [\dots]
+			\item Un \emph{pattern} \`e una descrizione della forma che i lessemi di un token possono avere. Nel caso di una parola chiave come token, il pattern \`e semplicemente la sequenza di caratteri che formano la parola chiave. Per gli identificatori e qualche altro token, il pattern \`e una struttura pi\`u complessa che riconosce pi\`u stringhe.
+			\item Un \emph{lessema} \`e una sequenza di caratteri del programma sorgente.''
+		\end{itemize}
+	}
+	\colplacechunks
+\end{parcolumns}
+
+Nella fase di analisi lessicale si alternano due operazioni:
+\begin{itemize}
+	\item definita da \cite{alfred2007compilers} come \emph{scanning}, si ignorano i caratteri che non sono significativi per il linguaggio (spazi bianchi e \emph{commenti});
+	\item definita da \cite{alfred2007compilers} come \emph{lexical analysis}, \`e la parte pi\`u complessa in cui si producono i token.
+\end{itemize}
+
+In BugginOut, i token utilizzati sono diversi, alcuni dei quali sono:
+\begin{table}[H]
+	\begin{tabularx}{\textwidth}{X|X|X}
+		\hline
+		\hline
+		\multicolumn{1}{c|}{\textsc{Token}} & \multicolumn{1}{c|}{\textsc{Pattern} (informale)} & \multicolumn{1}{c}{\textsc{Lessemi}} \\
+		\hline
+		\texttt{kw\_for} & i seguenti caratteri: \texttt{for} & \texttt{for} \\
+		\hline
+		\texttt{kw\_if} & i seguenti caratteri: \texttt{if} & \texttt{if} \\
+		\hline
+		\texttt{Identifier} & una lettera oppure \mbox{\texttt{\_} o \texttt{\$}} seguita da una serie di lettere, cifre numeriche oppure \mbox{\texttt{\_} o \texttt{\$}} & \texttt{a}, \texttt{b}, \texttt{token\_name}, \texttt{num1}, \ldots \\
+		\hline
+		\texttt{IntegerLiteral} & uno o pi\`u cifre decimali\footnotemark & \texttt{1}, \texttt{123}, \ldots \\
+		\hline
+		\hline
+	\end{tabularx}
+	\caption{Alcuni token di BugginOut}
+	\label{fig:bugginout-example-tokens}
+\end{table}
+
+\footnotetext{In BugginOut \`e possibile utilizzare i numeri in notazione binari, ottale ed esadecimale. Per esempio \texttt{0b101} \`e un numero binario, \texttt{0o127} \`e un numero ottale e \texttt{0x1A} \`e un numero esadecimale. Inoltre possono essere seguiti da un suffisso per indicarne il tipo. Il pattern per entrambi \`e stato omesso in quanto non rilevante per l'esempio.}
+
+Quando pi\`u di un lessema pu\`o essere riconosciuto da un pattern, l'analizzatore lessicale inserisce nel valore delle informazioni aggiuntive utili alle fasi successive di compilazione. Ad esempio, nel caso di un numero, il valore \`e il numero stesso. Ad esempio, facendo riferimento all'esempio \ref{fig:bugginout-example-tokens}, il token \texttt{IntegerLiteral} conterrebbe come valore \texttt{123}.
+
+\`E importante osservare che ci\`o che influenzer\`a le decisioni di analisi grammaticale del compilatore \`e il nome del token e non il suo valore che, invece, viene usato per la traduzione dei token.
+
+Per completezza, di seguito verranno riporati tutti i token definiti in BugginOut con pattern denotato con la sintassi POSIX ERE (vedi \cite{iso-9945-2009}).
+
+\begin{xltabular}{\textwidth}{l|X}
+	\caption{Token di BugginOut}
+	\label{fig:bugginout-complete-tokens} \\
+
+	\hline
+	\hline
+	\multicolumn{1}{c|}{\textsc{Token}} & \multicolumn{1}{c|}{\textsc{Pattern}} \\
+	\hline
+	\endfirsthead
+
+	\hline
+	\hline
+	\multicolumn{1}{c|}{\textsc{Token}} & \multicolumn{1}{c|}{\textsc{Pattern}} \\
+	\hline
+	\endhead
+
+	\hline
+	\hline
+	\endfoot
+
+	\hline
+	\hline
+	\endlastfoot
+
+	\texttt{kw\_anon} & \texttt{anon} \\ \hline
+	\texttt{kw\_as} & \texttt{as} \\ \hline
+	\texttt{kw\_bool} & \texttt{bool} \\ \hline
+	\texttt{kw\_break} & \texttt{break} \\ \hline
+	\texttt{kw\_char} & \texttt{char} \\ \hline
+	\texttt{kw\_continue} & \texttt{continue} \\ \hline
+	\texttt{kw\_else} & \texttt{else} \\ \hline
+	\texttt{kw\_f32} & \texttt{f32} \\ \hline
+	\texttt{kw\_f64} & \texttt{f64} \\ \hline
+	\texttt{kw\_false} & \texttt{false} \\ \hline
+	\texttt{kw\_fn} & \texttt{fn} \\ \hline
+	\texttt{kw\_for} & \texttt{for} \\ \hline
+	\texttt{kw\_i16} & \texttt{i16} \\ \hline
+	\texttt{kw\_i32} & \texttt{i32} \\ \hline
+	\texttt{kw\_i64} & \texttt{i64} \\ \hline
+	\texttt{kw\_i8} & \texttt{i8} \\ \hline
+	\texttt{kw\_if} & \texttt{if} \\ \hline
+	\texttt{kw\_in} & \texttt{in} \\ \hline
+	\texttt{kw\_isize} & \texttt{isize} \\ \hline
+	\texttt{kw\_mut} & \texttt{mut} \\ \hline
+	\texttt{kw\_null} & \texttt{null} \\ \hline
+	\texttt{kw\_return} & \texttt{return} \\ \hline
+	\texttt{kw\_true} & \texttt{true} \\ \hline
+	\texttt{kw\_u16} & \texttt{u16} \\ \hline
+	\texttt{kw\_u32} & \texttt{u32} \\ \hline
+	\texttt{kw\_u64} & \texttt{u64} \\ \hline
+	\texttt{kw\_u8} & \texttt{u8} \\ \hline
+	\texttt{kw\_usize} & \texttt{usize} \\ \hline
+	\texttt{kw\_var} & \texttt{var} \\ \hline
+	\texttt{kw\_void} & \texttt{void} \\ \hline
+	\texttt{Ampersand} & \texttt{\&} \\ \hline
+	\texttt{AmpersandEquals} & \texttt{\&=} \\ \hline
+	\texttt{Asterisk} & \texttt{*} \\ \hline
+	\texttt{AsteriskEquals} & \texttt{*=} \\ \hline
+	\texttt{At} & \texttt{@} \\ \hline
+	\texttt{BinaryLiteral} & \texttt{0b[01]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?}  \\ \hline
+	\texttt{CharLiteral} & \texttt{\textquotesingle([\textasciicircum \textquotesingle]|\textbackslash \textquotesingle |\textbackslash n|\textbackslash r|\textbackslash t|\textbackslash\textbackslash|\textbackslash 0|\textbackslash x[0-7][0-9a-fA-F])\textquotesingle} \\ \hline
+	\texttt{Circumflex} & \texttt{\textasciicircum} \\ \hline
+	\texttt{CircumflexEquals} & \texttt{\textasciicircum=} \\ \hline
+	\texttt{Colon} & \texttt{:} \\ \hline
+	\texttt{Comma} & \texttt{,} \\ \hline
+	\texttt{DecimalLiteral} & \texttt{[0-9]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?} \\ \hline
+	\texttt{Dot} & \texttt{.} \\ \hline
+	\texttt{DotDotEquals} & \texttt{..=} \\ \hline
+	\texttt{DotDotLessThan} & \texttt{..<} \\ \hline
+	\texttt{DoubleAmpersand} & \texttt{\&\&} \\ \hline
+	\texttt{DoubleAmpersandEquals} & \texttt{\&\&=} \\ \hline
+	\texttt{DoubleEquals} & \texttt{==} \\ \hline
+	\texttt{DoublePipe} & \texttt{||} \\ \hline
+	\texttt{DoublePipeEquals} & \texttt{||=} \\ \hline
+	\texttt{EndOfFile}\footnotemark & \\ \hline
+	\texttt{Equals} & \texttt{=} \\ \hline
+	\texttt{ExclamationMark} & \texttt{!} \\ \hline
+	\texttt{ExclamationMarkEquals} & \texttt{!=} \\ \hline
+	\texttt{FloatLiteral} & \texttt{[0-9]+.[0-9]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?} \\ \hline
+	\texttt{GreaterThan} & \texttt{>} \\ \hline
+	\texttt{GreaterThanEquals} & \texttt{>=} \\ \hline
+	\texttt{HexadecimalLiteral} & \texttt{0x[0-9a-fA-F]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?} \\ \hline
+	\texttt{Identifier} & \texttt{[a-zA-Z\_\$][a-zA-Z\_\$0-9]*} \\ \hline
+	\texttt{LeftCurlyBracket} & \texttt{\textbackslash \{} \\ \hline
+	\texttt{LeftParenthesis} & \texttt{\textbackslash (} \\ \hline
+	\texttt{LeftShift} & \texttt{<<} \\ \hline
+	\texttt{LeftShiftEquals} & \texttt{<<=} \\ \hline
+	\texttt{LeftSquareBracket} & \texttt{\textbackslash [} \\ \hline
+	\texttt{LessThan} & \texttt{<} \\ \hline
+	\texttt{LessThanEquals} & \texttt{<=} \\ \hline
+	\texttt{Minus} & \texttt{-} \\ \hline
+	\texttt{MinusEquals} & \texttt{-=} \\ \hline
+	\texttt{MinusMinus} & \texttt{--} \\ \hline
+	\texttt{OctalLiteral} & \texttt{0o[0-7]+(\_[a-zA-Z\_\$][a-zA-Z\_\$0-9]*)?} \\ \hline
+	\texttt{Percent} & \texttt{\%} \\ \hline
+	\texttt{PercentEquals} & \texttt{\%=} \\ \hline
+	\texttt{Pipe} & \texttt{|} \\ \hline
+	\texttt{PipeEquals} & \texttt{|=} \\ \hline
+	\texttt{Plus} & \texttt{+} \\ \hline
+	\texttt{PlusEquals} & \texttt{+=} \\ \hline
+	\texttt{PlusPlus} & \texttt{++} \\ \hline
+	\texttt{RightCurlyBracket} & \texttt{\textbackslash \}} \\ \hline
+	\texttt{RightParenthesis} & \texttt{\textbackslash )} \\ \hline
+	\texttt{RightShift} & \texttt{>>} \\ \hline
+	\texttt{RightShiftEquals} & \texttt{>>=} \\ \hline
+	\texttt{RightSquareBracket} & \texttt{\textbackslash ]} \\ \hline
+	\texttt{Semicolon} & \texttt{;} \\ \hline
+	\texttt{Solidus} & \texttt{/} \\ \hline
+	\texttt{SolidusEquals} & \texttt{/=} \\ \hline
+	\texttt{StringLiteral} & \\ \hline
+	\texttt{Tilde} & \texttt{\textasciitilde} \\ \hline
+\end{xltabular}
+
+\footnotetext{Il token \texttt{EndOfFile} non ha un pattern associato in quanto viene generato quando l'analizzatore lessicale ha terminato di analizzare il file sorgente.}
 
 \section{Analisi grammaticale}
 \label{sec:analisi-grammaticale}

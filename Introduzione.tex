@@ -9,8 +9,8 @@ Il nome BugginOut \`e un gioco di parole sul termine \textit{bug} e il personagg
 
 Nel capitolo \ref{chap:flusso-di-compilazione} si analizzano tutte le fasi che portano un programma scritto in BugginOut (solitamente un file con estensione \texttt{.bo}), in particolare:
 \begin{itemize}
-	\item nel paragrafo \ref{sec:analisi-lessicale} si esamina la prima fase di compilazione: l'analisi lessicale del codice che consiste nella trasformazione del programma (un insieme di caratteri) in un insieme di \textit{token} (la parte atomica di ogni programma);
-	\item nel paragrafo \ref{sec:analisi-grammaticale} si esamina l'analisi grammaticale del codice: la trasformazione dell'insieme di \textit{token} prodotto dall'analisi lessicale in un \textit{AST} (\textit{Abstract Syntax Tree}), un albero che rappresenta la struttura di un programma (o una sua parte) senza, per\`o, le informazioni contestuali;
+	\item nel paragrafo \ref{sec:analisi-lessicale} si esamina la prima fase di compilazione: l'analisi lessicale del codice che consiste nella trasformazione del programma (un insieme di caratteri) in un insieme di \emph{token} (la parte atomica di ogni programma);
+	\item nel paragrafo \ref{sec:analisi-grammaticale} si esamina l'analisi grammaticale del codice: la trasformazione dell'insieme di \emph{token} prodotto dall'analisi lessicale in un \emph{AST} (\textit{Abstract Syntax Tree}), un albero che rappresenta la struttura di un programma (o una sua parte) senza, per\`o, le informazioni contestuali;
 	\item nel paragrafo \ref{sec:analisi-semantica} si esamina l'analisi semantica del codice: l'arricchimento dell'AST generato dall'analisi grammaticale viene con informazioni contestuali come, ad esempio, variabili e funzioni dichiarate e i tipi utilizzati nel programma;
 	\item nel paragrafo \ref{sec:generazione-del-codice} si esamina la fase finale della compilazione: la generazione del codice C++ finale che viene poi compilato, da un compilatore C++ gi\`a esistente, nell'eseguibile finale del programma.
 \end{itemize}
