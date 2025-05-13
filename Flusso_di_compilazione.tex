@@ -10,7 +10,7 @@ Nel seguente capitolo si affronteranno, separatamente, le fasi di compilazione d
 
 Da \cite{alfred2007compilers}:
 
-\begin{parcolumns}[colwidths={1=0.45\textwidth,2=0.45\textwidth},rulebetween=true,nofirstindent=true]{2}
+\begin{parcolumns}[colwidths={1=0.44\textwidth,2=0.44\textwidth},rulebetween=true,nofirstindent=true,sloppy=true]{2}
 	% LTeX: language=en_us
 	\colchunk{
 		\leftskip=1em
@@ -75,7 +75,7 @@ Quando pi\`u di un lessema pu\`o essere riconosciuto da un pattern, l'analizzato
 
 \`E importante osservare che ci\`o che influenzer\`a le decisioni di analisi grammaticale del compilatore \`e il nome del token e non il suo valore che, invece, viene usato per la traduzione dei token.
 
-Per completezza, di seguito verranno riporati tutti i token definiti in BugginOut con pattern denotato con la sintassi POSIX ERE (vedi \cite{iso-9945-2009}).
+Per completezza, di seguito verranno riportati tutti i token definiti in BugginOut con pattern denotato con la sintassi POSIX ERE (vedi \cite{iso-9945-2009}).
 
 \begin{xltabular}{\textwidth}{l|X}
 	\caption{Token di BugginOut}
@@ -149,7 +149,7 @@ Per completezza, di seguito verranno riporati tutti i token definiti in BugginOu
 	\texttt{DoubleEquals} & \texttt{==} \\ \hline
 	\texttt{DoublePipe} & \texttt{\textbackslash |\textbackslash |} \\ \hline
 	\texttt{DoublePipeEquals} & \texttt{\textbackslash |\textbackslash |=} \\ \hline
-	\texttt{EndOfFile}\footnotemark & \\ \hline
+	\texttt{EndOfFile} & Non ha un pattern associato in quanto viene generato quando l'analizzatore lessicale ha terminato di analizzare il programma sorgente. \\ \hline
 	\texttt{Equals} & \texttt{=} \\ \hline
 	\texttt{ExclamationMark} & \texttt{!} \\ \hline
 	\texttt{ExclamationMarkEquals} & \texttt{!=} \\ \hline
@@ -188,12 +188,216 @@ Per completezza, di seguito verranno riporati tutti i token definiti in BugginOu
 	\texttt{Tilde} & \texttt{\textasciitilde}
 \end{xltabular}
 
-\footnotetext{Il token \texttt{EndOfFile} non ha un pattern associato in quanto viene generato quando l'analizzatore lessicale ha terminato di analizzare il file sorgente.}
+Per riconoscere i token, si passa dai pattern ad una rappresentazione intermedia definita da \cite{alfred2007compilers} come \emph{transition diagram} (in altre parole un automa a stati finiti). Analizziamo, ad esempio, come questo viene fatto per il token \texttt{Identifier}.
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[node distance=3.5cm, on grid, auto]
+		\node[state, initial] (0) {$q_0$};
+		\node[state, accepting] (1) [right=of 0] {$q_1$};
+
+		\path[->]
+		(0) edge node {\texttt{[a-zA-Z\_\$]}} (1)
+		(1) edge [loop above] node {\texttt{[a-zA-Z\_\$0-9]}} ();
+	\end{tikzpicture}
+	\caption{Diagramma di transizione per il token \texttt{Identifier}}
+	\label{fig:bugginout-identifier-transition-diagram}
+\end{figure}
+
+Questo diagramma di transizione \`e composto da due stati: lo stato iniziale $q_0$ e lo stato finale $q_1$. Quando il diagramma \`e in uno stato finale, significa che il token \`e stato riconosciuto. In questo caso, il diagramma inizia dallo stato $q_0$ e si sposta nello stato finale $q_1$ quando incontra un carattere che corrisponde al pattern. Da questo punto in poi, il diagramma rimane nello stato finale fino a quando non incontra un carattere che non corrisponde al pattern.
+
+Un esempio pi\`u complesso \`e quello del riconoscimento dei numeri (i token \texttt{BinaryLiteral}, \texttt{OctalLiteral}, \texttt{HexadecimalLiteral}, \texttt{DecimalLiteral} e \texttt{FloatLiteral}):
+\begin{figure}[H]
+	\centering
+	\scalebox{0.6}{\begin{tikzpicture}[node distance=3.5cm, on grid, auto]
+		\node[state, initial] (0) {$q_0$};
+		\node[state] (1) [right=of 0] {$q_1$};
+		\node[state] (2) [right=of 1] {$q_2$};
+		\node[state] (3) [below=of 2] {$q_3$};
+		\node[state] (4) [below=of 3] {$q_4$};
+		\node[state, accepting] (5) [right=of 2] {$q_5$};
+		\node[state] (6) [right=of 5] {$q_6$};
+		\node[state, accepting] (7) [right=of 6] {$q_7$};
+		\node[state, accepting] (8) [right=of 3] {$q_8$};
+		\node[state] (9) [right=of 8] {$q_9$};
+		\node[state, accepting] (10) [right=of 9] {$q_{10}$};
+		\node[state, accepting] (11) [right=of 4] {$q_{11}$};
+		\node[state] (12) [right=of 11] {$q_{12}$};
+		\node[state, accepting] (13) [right=of 12] {$q_{13}$};
+		\node[state, accepting] (14) [below=10.5cm of 1] {$q_{14}$};
+		\node[state] (15) [right=of 14] {$q_{15}$};
+		\node[state, accepting] (16) [right=of 15] {$q_{16}$};
+		\node[state] (17) [right=of 16] {$q_{17}$};
+		\node[state, accepting] (18) [right=of 17] {$q_{18}$};
+		\node[state] (19) [below=of 15] {$q_{19}$};
+		\node[state, accepting] (20) [right=of 19] {$q_{20}$};
+
+		\path[->]
+		(0) edge node {\texttt{0}} (1)
+		(1) edge node {\texttt{b}} (2)
+		(1) edge node {\texttt{o}} (3)
+		(1) edge node {\texttt{x}} (4)
+		(1) edge node {\texttt{[0-9]}} (14)
+		(2) edge node {\texttt{[01]}} (5)
+		(5) edge [loop above] node {\texttt{[01]}} ()
+		(5) edge node {\texttt{\_}} (6)
+		(6) edge node {\texttt{[a-zA-Z\_\$]}} (7)
+		(7) edge [loop above] node {\texttt{[a-zA-Z\_\$0-9]}} ()
+		(3) edge node {\texttt{[0-7]}} (8)
+		(8) edge [loop above] node {\texttt{[0-7]}} ()
+		(8) edge node {\texttt{\_}} (9)
+		(9) edge node {\texttt{[a-zA-Z\_\$]}} (10)
+		(10) edge [loop above] node {\texttt{[a-zA-Z\_\$0-9]}} ()
+		(4) edge node {\texttt{[0-9a-fA-F]}} (11)
+		(11) edge [loop above] node {\texttt{[0-9a-fA-F]}} ()
+		(11) edge node {\texttt{\_}} (12)
+		(12) edge node {\texttt{[a-zA-Z\_\$]}} (13)
+		(13) edge [loop above] node {\texttt{[a-zA-Z\_\$0-9]}} ()
+		(0) edge node {\texttt{[1-9]}} (14)
+		(14) edge [loop left] node {\texttt{[0-9]}} ()
+		(14) edge node {\texttt{.}} (15)
+		(15) edge node {\texttt{[0-9]}} (16)
+		(16) edge [loop above] node {\texttt{[0-9]}} ()
+		(16) edge node {\texttt{\_}} (17)
+		(17) edge node {\texttt{[a-zA-Z\_\$]}} (18)
+		(18) edge [loop above] node {\texttt{[a-zA-Z\_\$0-9]}} ()
+		(14) edge node {\texttt{\_}} (19)
+		(19) edge node {\texttt{[a-zA-Z\_\$]}} (20)
+		(20) edge [loop above] node {\texttt{[a-zA-Z\_\$0-9]}} ();
+	\end{tikzpicture}}
+	\caption{Diagramma di transizione per i token numerici}
+	\label{fig:bugginout-number-transition-diagram}
+\end{figure}
+
+In questo caso:
+\begin{itemize}
+	\item $q_5$ e $q_7$ sono gli stati finali per \texttt{BinaryLiteral};
+	\item $q_8$ e $q_{10}$ sono gli stati finali per \texttt{OctalLiteral};
+	\item $q_{11}$ e $q_{13}$ sono gli stati finali per \texttt{HexadecimalLiteral};
+	\item $q_{14}$ e $q_{20}$ sono gli stati finali per \texttt{DecimalLiteral};
+	\item $q_{16}$ e $q_{18}$ sono gli stati finali per \texttt{FloatLiteral}.
+\end{itemize}
+
+Si possono costruire diagrammi di transizione per ogni token e, inoltre, \`e possibile unirli per averne uno solo che rappresenter\`a l'intero funzionamento dell'analizzatore lessicale.
 
 \section{Analisi grammaticale}
 \label{sec:analisi-grammaticale}
 
+L'analisi grammaticale costituisce la fase in cui la sequenza di token prodotta dall'analisi lessicale viene organizzata secondo le regole sintattiche del linguaggio, definite da una \emph{grammatica} formale. Lo scopo di questa fase \`e costruire una struttura ad albero, l'\emph{AST} (\textit{Abstract Syntax Tree}), che rappresenta gerarchicamente la struttura del programma. Ogni nodo di questo albero rappresenta un costrutto sintattico del linguaggio, come espressioni, dichiarazioni o blocchi di codice. Compito di questa fase \`e anche individura gli \emph{errori sintattici} come, ad esempio, parentesi non bilanciate o costrutti mal formati.
 
+Per definire il comportamento dell'analizzatore grammaticale \`e necessario definire la grammatica del linguaggio definita da \cite{alfred2007compilers}:
+\begin{parcolumns}[colwidths={1=0.44\textwidth,2=0.44\textwidth},rulebetween=true,nofirstindent=true,sloppy=true]{2}
+	% LTeX: language=en_us
+	\colchunk{
+		\leftskip=1em
+		``A context-free grammar (grammar for short) consists of \emph{terminals}, \emph{nonterminals}, a \emph{start symbol} and \emph{productions}.
+
+		\begin{itemize}
+			\item \emph{Terminals} are the basic symbols from which strings are formed. The term "token name" is a synonim for "terminal" [\ldots].
+			\item \emph{Nonterminals} are syntactic variables that denote sets of strings. [\dots]. Nonterminals impose a hierarchical structure on the language that is key to syntax analysis and translation.
+			\item In a grammar, one nonterminal is distinguished as the \emph{start symbol}, and the set of strings it denotes is the language generated by the grammar. [\ldots]
+			\item The productions of a grammar specify the manner in which the terminals and nonterminals can be combined to form strings. Each \emph{production} consists of:
+			\begin{itemize}
+				\item A nonterminal called the \emph{head} or \emph{left side} of the production; this production defines some of the strings denoted by the head.
+				\item{} [\ldots]
+				\item A \emph{body} or \emph{right side} consisting of zero or more terminals and nonterminals. The components of the body describe one way in which strings of the nonterminal at the head can be constructed.''
+			\end{itemize}
+		\end{itemize}
+	}
+	% LTeX: language=it
+	\colchunk{
+		\leftskip=1em
+		``Una grammatica context-free (grammatica in breve) \`e costituita da \emph{terminali}, \emph{non terminali}, un \emph{simbolo di partenza} e da \emph{produzioni}.
+
+		\begin{itemize}
+			\item I \emph{terminali} sono i simboli di base da cui sono formate le stringhe. Il termine "nome del token" \`e sinonimo di "terminale" [\ldots].
+			\item I \emph{non terminali} sono variabili sintattiche che denotano insiemi di stringhe. [\ldots]. I non terminali impongono una struttura gerarchica al linguaggio che \`e fondamentale per l'analisi sintattica e la traduzione.
+			\item In una grammatica, un non terminale \`e distinto come il \emph{simbolo di partenza} e l'insieme di stringhe che denota \`e il linguaggio generato dalla grammatica. [\ldots]
+			\item Le produzioni di una grammatica specificano il modo in cui i terminali e i non terminali possono essere combinati per formare stringhe. Ogni \emph{produzione} \`e costituita da:
+			\begin{itemize}
+				\item Un non terminale chiamato \emph{testa} o \emph{lato sinistro} della produzione; questa produzione definisce alcune delle stringhe denotate dalla testa.
+				\item{} [\ldots]
+				\item Un \emph{corpo} o \emph{lato destro} costituito da zero o pi\`u terminali e non terminali. I componenti del corpo descrivono un modo in cui le stringhe del non terminale nella testa possono essere costruite.''
+			\end{itemize}
+		\end{itemize}
+	}
+	\colplacechunks
+\end{parcolumns}
+
+\`E bene notare che questo tipo di grammatica non \`e capace di descrivere l'intera sintassi del linguaggio. Ad esempio, il requisito che una variabile sia dichiarata prima del suo utilizzo o che il valore assegnatogli sia del tipo corretto non pu\`o essere descritto in questo modo. Questo tipo di controlli \`e compito della fase di analisi semantica.
+
+Vediamo alcuni costrutti sintattici di BugginOut scritti in BNF (\textit{Backus-Naur Form}).
+
+\begin{figure}[H]
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+<function_parameter> ::= "anon"? "mut"? <Identifier> ":" <Type>
+<function_parameters> ::= <function_parameter> ("," <function_parameter>)*
+
+<FunctionDeclarationStatement> ::=
+	"fn" <Identifier> "(" <function_parameters>? ")" ":" <Type>
+	<BlockExpression>
+	\end{minted}
+	\label{fig:bugginout-function-declaration}
+	\caption{Grammatica per la dichiarazione di una funzione}
+\end{figure}
+
+In questo esempio possiamo notare che una dichiarazione di funzione \`e definita, in ordine, da:
+\begin{itemize}
+	\item la parola chiave \texttt{fn};
+	\item un'identificatore (il token \texttt{Identifier});
+	\item una parentesi tonda aperta (il token \texttt{LeftParenthesis});
+	\item una lista opzionale di parametri definiti dalla regola \raggedright\texttt{<function\_parameters>};
+	\item una parentesi tonda chiusa (il token \texttt{RightParenthesis});
+	\item due punti (il token \texttt{Colon});
+	\item un tipo, definito dalla regola \texttt{<Type>};
+	\item un blocco, definito dalla regola \texttt{<BlockExpression>}.
+\end{itemize}
+
+A loro volta, i parametri della funzione sono definiti da un parametro di funzione, definito dalla regola \texttt{<function\_parameter>}, seguito da una virgola e da un altro parametro di funzione ripetuti zero o pi\`u volte. \`E importante osservare che la ricorsione \`e destra e non sinistra, il motivo verr\`a approfondito quando si discuter\`a del tipo di approccio utilizzato per l'analisi grammaticale.
+
+Un altro esempio interessante \`e la definizione delle espressioni binarie:
+\begin{figure}[H]
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+<BinaryExpression> ::=
+	<Expression>
+	("+" | "-" | "*" | "/" | "%" | "<<" | ">>" | "<" | ">" | "<=" | ">=" | "==" | "!=" | "&" | "^" | "|" | "&&" | "||")
+	<Expression>
+	\end{minted}
+	\label{fig:bugginout-binary-expression}
+	\caption{Grammatica per le espressioni binarie}
+\end{figure}
+
+Il motivo per cui ci interessa analizzare questa regola \`e la sua \emph{ambiguit\`a}, ci\`o significa che esistono pi\`u modi d'interpretare la stessa espressione. Ad esempio, l'espressione \texttt{a + b * c} pu\`o essere interpretata in due modi diversi:
+\begin{itemize}
+	\item \texttt{(a + b) * c}, in cui l'operazione di somma viene eseguita prima della moltiplicazione;
+	\item \texttt{a + (b * c)}, in cui l'operazione di moltiplicazione viene eseguita prima della somma.
+\end{itemize}
+Citando \cite{alfred2007compilers}:
+\begin{parcolumns}[colwidths={1=0.44\textwidth,2=0.44\textwidth},rulebetween=true,nofirstindent=true,sloppy=true]{2}
+	% LTeX: language=en_us
+	\colchunk{
+		\leftskip=1em
+		``There are two reasons why we might prefer to use the ambiguous grammar. First, as we shall see, we can easily change the \emph{associativity} and \emph{precedence} of the operators without disturbing the productions or the number of states in the resulting parser.~[\ldots]''
+	}
+	% LTeX: language=it
+	\colchunk{
+		\leftskip=1em
+		``Ci sono due ragioni per le quali potremmo preferire utilizzare la grammatica ambigua. Per prima cosa, come vedremo, possiamo facilmente cambiare l'\emph{associatività} e \emph{precedenza} degli operatori senza disturbare le produzioni o il numero di stati dell'analizzatore grammaticale.~[\ldots]''
+	}
+	\colplacechunks
+\end{parcolumns}
+
+Chiarito il concetto di grammatica e avendone visto alcuni esempi, \`e possibile passare alla discussione dell'analizzatore grammaticale.
+
+In generale un analizzatore grammaticale pu\`o seguire due principali strategie:
+\begin{itemize}
+	\item \emph{top-down}, in cui l'analizzatore grammaticale inizia dalla radice dell'albero e scende verso le foglie;
+	\item \emph{bottom-up}, in cui l'analizzatore grammaticale inizia dalle foglie dell'albero e risale verso la radice.
+\end{itemize}
+La strategia scelta per BugginOut \`e quella \emph{top-down} per la sua semplicit\`a e facilit\`a d'uso. Pi\`u specificamente, l'analizzatore lessicale \`e un \textit{predictive parser} senza \textit{backtracking} costruito su una grammatica LL(1).
+
+Questo significa che, a ogni passo, si sceglie la produzione grammaticale corretta utilizzando solo il prossimo token restituito dall'analizzatore lessicale. \`E importante notare che, per costruire un analizzatore grammaticale di questo tipo, \`e necessario che la grammatica sia priva di \emph{ambiguit\`a} e \emph{ricorsioni sinistre}. La prima condizione \`e stata soddisfatta definendo l'associativit\`a e la precedenza degli operatori\footnote{Lo si vede nel dettaglio nel capitolo \ref{chap:architettura-del-compilatore}.} e la seconda scrivendo meticolosamente la grammatica per evitarle.
+
+Durante l'analisi grammaticale, si potrebbe incontrare un errore sintattico se un token incontrato non corrisponde a quello che ci si aspetta nella produzioen. In questo caso l'analizzatore grammaticale genera un errore e termina l'esecuzione. Questo approccio di gestione degli errori \`e il pi\`u semplice e non \`e in grado di recuperare gli errori. Su questo tema si spenderanno alcune parole nella sezione \ref{sec:limiti}.
 
 \section{Analisi semantica}
 \label{sec:analisi-semantica}
