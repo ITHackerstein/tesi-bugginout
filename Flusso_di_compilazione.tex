@@ -9,7 +9,6 @@ Nel seguente capitolo si affronteranno, separatamente, le fasi di compilazione d
 \label{sec:analisi-lessicale}
 
 Da \cite{alfred2007compilers}:
-
 \begin{parcolumns}[colwidths={1=0.44\textwidth,2=0.44\textwidth},rulebetween=true,nofirstindent=true,sloppy=true]{2}
 	% LTeX: language=en_us
 	\colchunk{
@@ -42,7 +41,6 @@ Da \cite{alfred2007compilers}:
 	\colplacechunks
 \end{parcolumns}
 
-In BugginOut, i token utilizzati sono diversi, alcuni dei quali sono:
 \begin{table}[H]
 	\begin{tabularx}{\textwidth}{X|X|X}
 		\hline
@@ -75,15 +73,14 @@ Quando pi\`u di un lessema pu\`o essere riconosciuto da un pattern, l'analizzato
 
 \`E importante osservare che ci\`o che influenzer\`a le decisioni di analisi grammaticale del compilatore \`e il nome del token e non il suo valore che, invece, viene usato per la traduzione dei token.
 
-Per completezza, di seguito verranno riportati tutti i token definiti in BugginOut con pattern denotato con la sintassi POSIX ERE (vedi \cite{iso-9945-2009}).
-
+Per completezza, di seguito verranno riportati tutti i token definiti in BugginOut.
 \begin{xltabular}{\textwidth}{l|X}
 	\caption{Token di BugginOut}
 	\label{fig:bugginout-complete-tokens} \\
 
 	\hline
 	\hline
-	\multicolumn{1}{c|}{\textsc{Token}} & \multicolumn{1}{c|}{\textsc{Pattern}} \\
+	\multicolumn{1}{c|}{\textsc{Token}} & \multicolumn{1}{c|}{\textsc{Pattern} (in POSIX ERE \cite{iso-9945-2009})} \\
 	\hline
 	\endfirsthead
 
@@ -92,7 +89,6 @@ Per completezza, di seguito verranno riportati tutti i token definiti in BugginO
 	\hline
 	\endhead
 
-	\hline
 	\endfoot
 
 	\hline
@@ -187,8 +183,7 @@ Per completezza, di seguito verranno riportati tutti i token definiti in BugginO
 	\texttt{StringLiteral} & \texttt{\textquotedbl ([\textasciicircum \textquotedbl \textbackslash \textbackslash]|\textbackslash \textbackslash \textquotedbl|\textbackslash \textbackslash n|\textbackslash \textbackslash r|\textbackslash \textbackslash t|\textbackslash \textbackslash \textbackslash \textbackslash|\textbackslash \textbackslash 0|\textbackslash \textbackslash x[0-7][0-9a-fA-F])*\textquotedbl} \\ \hline
 	\texttt{Tilde} & \texttt{\textasciitilde}
 \end{xltabular}
-
-Per riconoscere i token, si passa dai pattern ad una rappresentazione intermedia definita da \cite{alfred2007compilers} come \emph{transition diagram} (in altre parole un automa a stati finiti). Analizziamo, ad esempio, come questo viene fatto per il token \texttt{Identifier}.
+Per riconoscere i token, si passa dai pattern ad una rappresentazione intermedia: i \textit{transition diagram}. Questi vengono definiti da \cite{alfred2007compilers} e non sono altro che degli automi a stati finiti.
 \begin{figure}[H]
 	\centering
 	\begin{tikzpicture}[node distance=3.5cm, on grid, auto]
@@ -202,8 +197,9 @@ Per riconoscere i token, si passa dai pattern ad una rappresentazione intermedia
 	\caption{Diagramma di transizione per il token \texttt{Identifier}}
 	\label{fig:bugginout-identifier-transition-diagram}
 \end{figure}
+Questo diagramma di transizione \`e composto da due stati: lo stato iniziale $q_0$ e lo stato finale $q_1$. Quando il diagramma \`e in uno stato finale, significa che il token \`e stato riconosciuto.
 
-Questo diagramma di transizione \`e composto da due stati: lo stato iniziale $q_0$ e lo stato finale $q_1$. Quando il diagramma \`e in uno stato finale, significa che il token \`e stato riconosciuto. In questo caso, il diagramma inizia dallo stato $q_0$ e si sposta nello stato finale $q_1$ quando incontra un carattere che corrisponde al pattern. Da questo punto in poi, il diagramma rimane nello stato finale fino a quando non incontra un carattere che non corrisponde al pattern.
+In questo caso, il diagramma inizia dallo stato $q_0$ e si sposta nello stato finale $q_1$ quando incontra un carattere che corrisponde al pattern. Da questo punto in poi, il diagramma rimane nello stato finale fino a quando non incontra un carattere che non corrisponde al pattern.
 
 Un esempio pi\`u complesso \`e quello del riconoscimento dei numeri (i token \texttt{BinaryLiteral}, \texttt{OctalLiteral}, \texttt{HexadecimalLiteral}, \texttt{DecimalLiteral} e \texttt{FloatLiteral}):
 \begin{figure}[H]
@@ -353,9 +349,9 @@ In questo esempio possiamo notare che una dichiarazione di funzione \`e definita
 	\item un blocco, definito dalla regola \texttt{<BlockExpression>}.
 \end{itemize}
 
-A loro volta, i parametri della funzione sono definiti da un parametro di funzione, definito dalla regola \texttt{<function\_parameter>}, seguito da una virgola e da un altro parametro di funzione ripetuti zero o pi\`u volte. \`E importante osservare che la ricorsione \`e destra e non sinistra, il motivo verr\`a approfondito quando si discuter\`a del tipo di approccio utilizzato per l'analisi grammaticale.
+A loro volta, i parametri della funzione sono definiti da un parametro di funzione, definito dalla regola \texttt{<function\_parameter>}, seguito da una virgola e da un altro parametro di funzione ripetuti zero o pi\`u volte. \`E importante osservare che la ricorsione \`e destra e non sinistra; il motivo verr\`a approfondito quando si discuter\`a del tipo di approccio utilizzato per l'analisi grammaticale.
 
-Avendone discusso la grammatica vediamo, ad esempio, la dichiarazione una semplice funzione per aggiungere due numeri interi.
+Avendone discusso la grammatica vediamo, ad esempio, la dichiarazione una semplice funzione per sommare due numeri interi.
 \begin{figure}[H]
 	\centering
 	\begin{minted}[breaklines,linenos,frame=lines,fontsize=\footnotesize]{text}
@@ -415,12 +411,12 @@ Citando \cite{alfred2007compilers}:
 	% LTeX: language=en_us
 	\colchunk{
 		\leftskip=1em
-		``There are two reasons why we might prefer to use the ambiguous grammar. First, as we shall see, we can easily change the \emph{associativity} and \emph{precedence} of the operators without disturbing the productions or the number of states in the resulting parser.~[\ldots]''
+		``There are two reasons why we might prefer to use the ambiguous grammar. [\ldots] We can easily change the \emph{associativity} and \emph{precedence} of the operators without disturbing the productions or the number of states in the resulting parser.~[\ldots]''
 	}
 	% LTeX: language=it
 	\colchunk{
 		\leftskip=1em
-		``Ci sono due ragioni per le quali potremmo preferire utilizzare la grammatica ambigua. Per prima cosa, come vedremo, possiamo facilmente cambiare l'\emph{associatività} e \emph{precedenza} degli operatori senza disturbare le produzioni o il numero di stati dell'analizzatore grammaticale.~[\ldots]''
+		``Ci sono due ragioni per le quali potremmo preferire utilizzare la grammatica ambigua. [\ldots] Possiamo facilmente cambiare l'\emph{associatività} e \emph{precedenza} degli operatori senza disturbare le produzioni o il numero di stati dell'analizzatore grammaticale.~[\ldots]''
 	}
 	\colplacechunks
 \end{parcolumns}
@@ -432,11 +428,11 @@ In generale un analizzatore grammaticale pu\`o seguire due principali strategie:
 	\item \emph{top-down}, in cui l'analizzatore grammaticale inizia dalla radice dell'albero e scende verso le foglie;
 	\item \emph{bottom-up}, in cui l'analizzatore grammaticale inizia dalle foglie dell'albero e risale verso la radice.
 \end{itemize}
-La strategia scelta per BugginOut \`e quella \emph{top-down} per la sua semplicit\`a e facilit\`a d'uso. Pi\`u specificamente, l'analizzatore lessicale \`e un \textit{predictive parser} senza \textit{backtracking} costruito su una grammatica LL(1).
+La strategia scelta per BugginOut \`e quella \emph{top-down} per la sua semplicit\`a e facilit\`a d'uso. Pi\`u specificamente, l'analizzatore lessicale \`e un \textit{predictive parser} senza \textit{backtracking} costruito su una grammatica LL(1) \cite{alfred2007compilers}.
 
 Questo significa che, a ogni passo, si sceglie la produzione grammaticale corretta utilizzando solo il prossimo token restituito dall'analizzatore lessicale. \`E importante notare che, per costruire un analizzatore grammaticale di questo tipo, \`e necessario che la grammatica sia priva di \emph{ambiguit\`a} e \emph{ricorsioni sinistre}. La prima condizione \`e stata soddisfatta definendo l'associativit\`a e la precedenza degli operatori\footnote{Lo si vede nel dettaglio nel capitolo \ref{chap:architettura-del-compilatore}.} e la seconda scrivendo meticolosamente la grammatica per evitarle.
 
-Durante l'analisi grammaticale, si potrebbe incontrare un errore sintattico se un token incontrato nel programma sorgente non corrisponde a quello che ci si aspetta nella produzione.
+Durante l'analisi grammaticale, si potrebbe incorrere in un errore sintattico se un token incontrato durante l'analisi lessicale del programma sorgente non corrisponde a quello che ci si aspetta nella produzione.
 \begin{figure}[H]
 	\centering
 	\begin{minted}[breaklines,linenos,frame=lines,fontsize=\footnotesize]{text}
