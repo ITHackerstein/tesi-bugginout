@@ -443,6 +443,7 @@ fn add(a: i32, b: i32): i32 {
 	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
 error.bo: Expected "RightParenthesis", got "RightCurlyBracket"!
    3 | }
+       ^
 	\end{minted}
 	\label{fig:bugginout-syntax-error}
 	\caption{Errore sintattico generato nel caso di parentesi non bilanciate}
@@ -451,6 +452,123 @@ In questo caso l'analizzatore grammaticale genera un errore e termina l'esecuzio
 
 \section{Analisi semantica}
 \label{sec:analisi-semantica}
+
+L'analisi semantica \`e la fase di compilazione in cui viene verificata la correttezza semantica del programma. In questa fase, l'analizzatore semantico controlla che le operazioni siano valide in base al tipo di dati e alle regole del linguaggio.
+
+I controlli semantici includono:
+\begin{itemize}
+	\item ordine delle dichiarazioni: verifica che le variabili siano dichiarate prima di essere utilizzate;
+	\item ambito (\emph{scope}): verifica che le variabili siano utilizzate all'interno del loro ambito di visibilit\`a;
+	\item assegnabilit\`a: verifica se un'espressione \`e assegnabile ad un'altra;
+	\item firma delle funzioni: verifica che le funzioni siano chiamate con il numero e il tipo corretto di argomenti;
+	\item ...
+\end{itemize}
+Di tutti i controlli quello che merita una particolare attenzione \`e il \emph{type checking} (controllo dei tipi). Questo controllo verifica che i valori siano usati in maniera coerenti con i loro tipi, ad esempio che non si tenti di assegnare un numero a una stringa o che si assegni un valore booleano a una variabile intera.
+
+Citando \cite{alfred2007compilers}:
+\begin{parcolumns}[colwidths={1=0.44\textwidth,2=0.44\textwidth},rulebetween=true,nofirstindent=true,sloppy=true]{2}
+	% LTeX: language=en_us
+	\colchunk{
+		\leftskip=1em
+		``To do \emph{type checking} a compiler needs to assign a type expression to each component of the source program. The compiler must then determine that these type expressions conform to a collection of logical rules that is called the \emph{type system} for the source language.
+
+		[\ldots]
+
+		Type checking can take on two forms: synthesis and inference. \emph{Type synthesis} builds up the type of an expression from the types of its sub expressions.~[\dots] \emph{Type inference} determines the type of a language construct from the way it is used.''
+	}
+	% LTeX: language=it
+	\colchunk{
+		\leftskip=1em
+		``Per fare il \emph{type checking} un compilatore deve assegnare un'espressione di tipo a ciascun componente del programma sorgente. Il compilatore deve quindi determinare che queste espressioni di tipo siano conformi a una collezione di regole logiche che viene chiamata \emph{type sistem} per il linguaggio sorgente.
+
+		[\ldots]
+
+		Il type checking pu\`o assumere due forme: sintesi e inferenza. La \emph{sintesi} costruisce il tipo di un'espressione dai tipi delle sue sottoespressioni.~[\dots] L'\emph{inferenza} determina il tipo di un costrutto del linguaggio dal modo in cui viene utilizzato.''
+	}
+	\colplacechunks
+\end{parcolumns}
+
+Analizziamo ora alcuni esempi di \emph{type checking}.
+
+Di seguito le operazioni per l'analisi semantica di una dichiarazione di variabile:
+\begin{enumerate}
+	\item si verifica se la dichiarazione specifica un tipo per la variabile in maniera esplicita:
+	\begin{itemize}
+		\item in tal caso, si passa ad analizzare semanticamente l'espressione che inizializza la variabile e a verificare che abbia lo stesso tipo della variabile (esempio di sintesi del tipo della variabile);
+		\item altrimenti, la variabile assume il valore del tipo dell'espressione che la inizializza (esempio d'inferenza del tipo della variabile).
+	\end{itemize}
+	\item si verifica se la variabile \`e gi\`a stata dichiarata in precedenza usando la \emph{tabella dei simboli}\footnote{Si veda il capitolo \ref{chap:architettura-del-compilatore} per un approfondimento su questo argomento.}.
+\end{enumerate}
+
+Di seguito le operazioni per l'analisi semantica di un'espressione \texttt{if}:
+\begin{enumerate}
+	\item si esegue l'analisi semantica della condizione e si verifica che il tipo dell'espressione sia booleana;
+	\item si esegue l'analisi semantica del blocco \texttt{then};
+	\item se esiste, si esegue l'analisi semantica del blocco \texttt{else} e si controlla che abbia lo stesso tipo del blocco \texttt{then}.
+\end{enumerate}
+
+Di seguito le operazioni per l'analisi semantica di un'espression \texttt{return}:
+\begin{enumerate}
+	\item si verifica se si restituisce un'espressione:
+	\begin{itemize}
+		\item in tal caso, si esegue l'analisi semantica dell'espressione e si verifica che il suo tipo sia compatibile con il tipo di ritorno della funzione che si sta analizzando;
+		\item altrimenti, si verifica che la funzione abbia tipo di ritorno \texttt{void}.
+	\end{itemize}
+\end{enumerate}
+
+Durante le operazioni descritte si possono generare errori semantici. Ad esempio, se si tenta di dichiarare una variabile con lo stesso nome di una gi\`a esistente, si genera un errore semantico.
+
+Osserviamone ora qualche esempio:
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,linenos,frame=lines,fontsize=\footnotesize]{text}
+fn add(a: i32): i32 {
+  var c = a + b;
+  return c;
+}
+	\end{minted}
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+not_declared.bo: Unknown identifier
+   2 |   var c = a + b;
+                     ^
+	\end{minted}
+	\label{fig:unknown-identifier-error}
+	\caption{Errore semantico generato per una variabile non dichiarata}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,linenos,frame=lines,fontsize=\footnotesize]{text}
+fn foo(): i32 {
+	return 1 + "2";
+}
+	\end{minted}
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+invalid_operation.bo: Incompatible types for binary operation
+   2 |   return 1 + "2";
+                ^^^^^^^
+	\end{minted}
+	\label{fig:invalid-binary-operation-error}
+	\caption{Errore semantico generato per un'operazione non valida}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,linenos,frame=lines,fontsize=\footnotesize]{text}
+fn foo(): i32 {
+	return "10";
+}
+	\end{minted}
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+invalid_return.bo: Incompatible return types
+   2 |     return "10";
+           ^^^^^^^^^^^^
+	\end{minted}
+	\label{fig:invalid-return-type-error}
+	\caption{Errore semantico generato per un tipo di ritorno non valido}
+\end{figure}
+
+\`E importante notare che gli errori semantici sono corretti dal punto di vista della grammatica del linguaggio, ma violano la logica del linguaggio. Trovare questi errori in fase di compilazione, prima dell'esecuzione di un programma, rende il codice pi\`u robusto e riduce il rischio di comportamenti imprevisti.
 
 \section{Generazione del codice}
 \label{sec:generazione-del-codice}

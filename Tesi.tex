@@ -1,7 +1,7 @@
 %! TeX program = lualatex
 
 % NOTE: Use twoside for the final print and oneside for the digital version
-\documentclass[a4paper,twoside,12pt]{report}
+\documentclass[a4paper,oneside,12pt]{report}
 \usepackage[italian]{babel}
 \usepackage{graphicx}
 \usepackage{tikz}
@@ -57,9 +57,9 @@
 		\end{tikzpicture}
 	\end{titlepage}
 
-	\pagenumbering{roman}
-
 	\cleardoublepage
+
+	\pagenumbering{roman}
 	\addcontentsline{toc}{chapter}{Abstract}
 	\include{Abstract}
 	\cleardoublepage
