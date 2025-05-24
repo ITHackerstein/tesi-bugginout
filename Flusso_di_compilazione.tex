@@ -572,3 +572,84 @@ invalid_return.bo: Incompatible return types
 
 \section{Generazione del codice}
 \label{sec:generazione-del-codice}
+
+La generazione del codice \`e la fase finale della compilazione in cui si traduce il \texttt{CheckedAST} (output dell'analisi semantica) in codice C++ pronto per essere compilato. Il codice generato in C++ ha l'obiettivo di essere leggibile e quanto pi\`u vicino possibile a quello originale, in modo da facilitarne il debug.
+
+Il codice C++ generato \`e composto da:
+\begin{itemize}
+	\item \emph{prelude}: una serie di dichiarazioni e inclusioni necessarie per il corretto funzionamento del codice generato\footnote{Lo si approfondir\`a nel capitolo \ref{chap:architettura-del-compilatore}.};
+	\item prototipi delle funzioni: per ogni funzione dichiarata nel programma BugginOut originale, ne si inserisce il prototipo;
+	\item dichiarazioni di funzioni: dopo averne dichiarato i prototipi, si passa a inserirne le implementazioni;
+	\item \emph{main}: la funzione principale del programma, costituita da una sola chiamata alla funzione \emph{bo\_main}\footnote{La funzione \texttt{main} deve essere presente in ogni programma BugginOut e in fase di generazione del codice viene rinominata in \texttt{bo\_main} per evitare conflitti con la funzione \texttt{main} prevista dal compilatore C++}.
+\end{itemize}
+
+Sebbene una quantit\`a elevata dei nodi generati trova una corrispondenza diretta con il codice C++ generato, alcuni nodi meritano un particolare approfondimento: i tipi, l'espressioni \texttt{if} e i blocchi.
+
+Per la traduzione dei tipi, si effettuano le seguenti operazioni:
+\begin{itemize}
+	\item i tipi primitivi vengono tradotti cos\`i come sono grazie a degli alias definiti dal \emph{prelude};
+	\item gli \emph{array} vengono tradotti in \texttt{std::array};
+	\item gli \emph{slice} vengono tradotti in \texttt{std::span};
+	\item i range vengono tradotti nel tipo \texttt{bo\_range} definito nel \emph{prelude}\footnote{Si veda il capitolo \ref{chap:architettura-del-compilatore} per un approfondimento su questo tipo.};
+	\item i puntatori vengono tradotti usando la sintassi dei puntatori C++ (ovvero \texttt{type*})\footnote{\`E bene notare che quindi un puntatore, \emph{weak} o \emph{strong} che sia, viene tradotto nello stesso tipo. \`E possibile farlo in quanto la compatibilit\`a dei tipi \`e garantita dalla fase di analisi semantica.};
+\end{itemize}
+
+Le espressioni \texttt{if}, invece, meritano un trattamento speciale nel caso in cui queste siano usate come espressione, ad esempio se si deve tradurre:
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var x = if (a > b) { a } else { b };
+	\end{minted}
+	\label{fig:bugginout-if-expression}
+	\caption{Esempio di espressione \texttt{if} in BugginOut usata come espressione}
+\end{figure}
+Per tradurre questo tipo di espressione, non supportata nativamente dal C++, si fa uso dell'estensione \emph{compound statements} del compilatore GNU\footnote{Di questo si parler\`a meglio nel capitolo \ref{chap:conclusioni}.} per tradurre l'espressione in un blocco di codice che restituisce il valore corretto:
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{cpp}
+i32 const x = (({
+    i32 __block_ret_1 {};
+    if (static_cast<bool>((a)>(b)))
+    {
+        __block_ret_1 = a;
+    }
+    else
+    {
+        __block_ret_1 = ({
+            b;
+        });
+    }
+    __block_ret_1;
+}));
+	\end{minted}
+	\label{fig:bugginout-if-expression-transpiled}
+	\caption{Traduzione dell'esempio precedente in C++}
+\end{figure}
+In questo modo, l'espressione \texttt{if} viene tradotta in un blocco di codice che memorizza il valore corretto in una variabile restituita alla fine di esso.
+
+Un discorso analogo vale per i blocchi di codice, per fare un esempio, il seguente blocco di codice
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var y = {
+    var x = 1;
+    x + 2
+}
+	\end{minted}
+	\label{fig:bugginout-block-expression}
+	\caption{Esempio di blocco che restituisce un valore in BugginOut}
+\end{figure}
+viene tradotto in C++ come:
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{cpp}
+i32 const y = ({
+    i32 const x = (static_cast<i32>(1));
+    static_cast<i32>((x)+(static_cast<i32>(2)));
+});
+	\end{minted}
+	\label{fig:bugginout-block-expression-transpiled}
+	\caption{Traduzione dell'esempio precedente in C++}
+\end{figure}
+
+Una volta generato il codice C++, questo viene memorizzato in un file con estensione \texttt{.cpp} e, successivamente, compilato usando il compilatore GNU C++ per produrre un eseguibile\footnote{Si veda il capitolo \ref{chap:architettura-del-compilatore} per un approfondimento su questo argomento.}.
