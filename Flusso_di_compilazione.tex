@@ -21,7 +21,7 @@ Da \cite{alfred2007compilers}:
 		\begin{itemize}
 			\item A \emph{token} is a pair consisting of a token \emph{name} and an optional attribute \emph{value}. The token name is an abstract symbol representing a kind of lexical unit, e.g., a particular keyword, or a sequence of input characters denoting an identifier. [\ldots]
 			\item A \emph{pattern} is a description of the form that the lexemes of a token may take. In the case of a kewyord as a token, the pattern is just the sequence of characters that form the keyword. For identifiers and some other tokens, the pattern is a more complex structure that is matched by many strings.
-			\item A \emph{lexeme} is a sequence of characters in the source program that matches the pattern for a token and is identified by the lexical analyzer as an instance of that token.
+			\item A \emph{lexeme} is a sequence of characters in the source program that matches the pattern for a token and is identified by the lexical analyzer as an instance of that token.''
 		\end{itemize}
 	}
 	% LTeX: language=it
@@ -342,7 +342,7 @@ In questo esempio possiamo notare che una dichiarazione di funzione \`e definita
 	\item la parola chiave \texttt{fn};
 	\item un'identificatore (il token \texttt{Identifier});
 	\item una parentesi tonda aperta (il token \texttt{LeftParenthesis});
-	\item una lista opzionale di parametri definiti dalla regola \raggedright\texttt{<function\_parameters>};
+	\item una lista opzionale di parametri definiti dalla regola \linebreak \texttt{<function\_parameters>};
 	\item una parentesi tonda chiusa (il token \texttt{RightParenthesis});
 	\item due punti (il token \texttt{Colon});
 	\item un tipo, definito dalla regola \texttt{<Type>};
