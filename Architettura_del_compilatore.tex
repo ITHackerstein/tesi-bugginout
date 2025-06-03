@@ -160,6 +160,28 @@ Per gestire la precedenza e l'associativit\`a degli operatori si usa una classe 
 \section{\texttt{Typechecker}}
 \label{sec:typechecker}
 
+L'analisi semantica \`e realizzata per mezzo del \textit{namespace} \texttt{Types}, il \textit{namespace} \texttt{CheckedAST} e la classe \texttt{Typechecker}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figures/types.png}
+	\caption{Diagramma UML del \textit{namespace} \texttt{Types}}
+	\label{fig:typechecker-types}
+\end{figure}
+
+Il \textit{namespace} \texttt{Types} si occupa dell'\emph{type system} e contiene le seguenti classi:
+\begin{itemize}
+	\item delle classi vuote per ogni tipo primitivo (\texttt{U8}, \texttt{U16}, ...);
+	\item le classi \texttt{Pointer}, \texttt{Array}, \texttt{Slice} e \texttt{Range} per i rispettivi tipi;
+	\item la classe \texttt{Type} che altro non \`e che una \textit{variante} su tutti i tipi elencati sopra.
+\end{itemize}
+Le classi per i tipi composti contengono:
+\begin{itemize}
+	\item un riferimento al tipo \textit{interno} (nel caso del puntatore, ad esempio, il tipo del valore a cui esso punta) memorizzato come un identificatore numerico che verr\`a approfondito nella discussione del \texttt{CheckedAST};
+	\item alcuni attributi specifici per il tipo (ad esempio, la classe \texttt{Array} contiene l'attributo \texttt{size} che rappresenta la dimensione dell'array).
+\end{itemize}
+La classe \texttt{Type} mette a disposizione una serie di metodi per creare dei tipi (\texttt{u8}, \texttt{pointer}, ...) e per ottenere specifiche informazioni sul tipo (\texttt{is}, \texttt{size}, ...)
+
 \section{\texttt{Transpiler}}
 \label{sec:transpiler}
 
