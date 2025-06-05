@@ -182,30 +182,35 @@ Le classi per i tipi composti contengono:
 \end{itemize}
 La classe \texttt{Type} \`e semplicemente un \textit{wrapper} intorno alla variante di tutte le classi viste sopra. Il motivo per il quale \`e stato scelto un \textit{sum-type} invece che una gerarchia di classi \`e che non c'\`e bisogno di allocazioni sull'\textit{heap} e consentono una maggiore \textit{type safety} nelle operazioni di conversione. La classe, inoltre, fornisce dei metodi per la creazione di tipi (\texttt{u8}, \texttt{pointer}, \texttt{array}, ...), per ottenere informazioni sul tipo (\texttt{is}, \texttt{size}, ...) e per ottenere il tipo sottostante (\texttt{as}).
 
-% FIXME: create diagram
-% \begin{figure}[H]
-% 	\centering
-% 	\includegraphics[width=0.9\textwidth]{figures/checked-ast.png}
-% 	\caption{Diagramma UML del \textit{namespace} \texttt{CheckedAST}}
-% 	\label{fig:checked-ast-uml}
-% \end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figures/checked_ast.png}
+	\caption{Diagramma UML del \textit{namespace} \texttt{CheckedAST}}
+	\label{fig:checked-ast-uml}
+\end{figure}
 
-L'AST viene poi replicato aggiungendo le informazioni di tipo nel \textit{namespace} \texttt{CheckedAST}. L'aggiunta consiste nell'inserimento dell'attributo \texttt{type} di tipo \texttt{Types::Id} in \texttt{Node}. Il tipo \texttt{Types::Id} \`e un identificatore numerico univoco del tipo il cui significato sar\`a finalmente chiarito nella discussione della classe \texttt{Typechecker}.
+Il \texttt{CheckedAST} \`e una struttura analoga all'\texttt{AST} originale, ma arricchita con informazioni di tipo. L'arricchimento consiste nell'aggiunta, in ciascun \texttt{Node}, di un attributo \texttt{type} di tipo \texttt{Types::Id}. Quest'ultimo rappresenta un identificatore numerico univoco del tipo, il cui significato sarà chiarito nel paragrafo dedicato alla classe \texttt{Typechecker}. Una differenza sostanziale rispetto all'\texttt{AST} è la rimozione del sottoalbero di classi \texttt{Type}, le cui informazioni vengono ora riassunte tramite l'identificatore del tipo.
 
-% FIXME: add examples of checked ast
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figures/checked_ast_program.png}
+	\caption{Diagramma UML della classe \texttt{CheckedAST::Program}}
+	\label{fig:checked-ast-program-uml}
+\end{figure}
 
-% FIXME: create diagram
-% \begin{figure}[H]
-% 	\centering
-% 	\includegraphics[width=0.9\textwidth]{figures/checked-ast-program.png}
-% 	\caption{Diagramma UML del \textit{namespace} \texttt{CheckedAST::Program}}
-% 	\label{fig:checked-ast-program-uml}
-% \end{figure}
-
-Di particolare importanza \`e la classe \texttt{Program} che contiene una serie di attributi che cade sotto il termine ombrello di \emph{tabella dei simboli}:
+La classe \texttt{Program} \`e particolarmente importante in quanto contiene una serie di attributi che cade sotto il termine ombrello di \emph{tabella dei simboli}:
 \begin{itemize}
 	\item \texttt{scopes}: \`e una lista di oggetti di tipo \texttt{Scope} che rappresentano gli \emph{scope} (ambito di visibilit\`a) del programma, ovvero la porzione di codice in cui una variabile \`e visibile e utilizzabile; ognuno di questi contiene un riferimento opzionale allo \textit{scope} genitore.
-	\item \texttt{functions}: \`e una lista di oggetti di tipo \texttt{Function} che contiene tutte le funzioni dichiarate nel programma;
+	\item \texttt{functions}: \`e una lista di oggetti di tipo \texttt{Function} che contiene tutte le funzioni dichiarate nel programma, costituite da:
+	\begin{itemize}
+		\item \texttt{name}: il nome della funzione;
+		\item \texttt{parameters}: una lista di oggetti di tipo \texttt{FunctionParameter} che rappresentano i parametri della funzione, ognuno dei quali contiene un oggetto di tipo \texttt{Variable} che rappresenta la sua dichiarazione e un booleano che indica se \`e \emph{anonimo};
+		\item \texttt{return\_type}: l'identificatore del tipo di ritorno della funzione;
+		\item \texttt{body}: il corpo della funzione, un oggetto di tipo \texttt{BlockExpression};
+		\item \texttt{scope\_id}: l'identificatore dello \textit{scope} dei parametri della funzione.
+		\item \texttt{is\_builtin}: un booleano che indica se \`e una funzione predefinita del linguaggio;
+		\item \texttt{is\_complete}: un booleano che indica se la funzione \`e completa o meno; una funzione \`e considerata completa se il suo corpo \`e stato analizzato.
+	\end{itemize}
 	\item \texttt{variables}: è una lista di oggetti di tipo \texttt{Variable} che contengono informazioni sulle variabili dichiarate nel programma e sono:
 	\begin{itemize}
 		\item \texttt{type\_id}: l'ID del tipo della variabile;
@@ -216,17 +221,21 @@ Di particolare importanza \`e la classe \texttt{Program} che contiene una serie 
 	\end{itemize}
 \end{itemize}
 
-% FIXME: create diagram
-% \begin{figure}[H]
-% 	\centering
-% 	\includegraphics[width=0.9\textwidth]{figures/typechecker.png}
-% 	\caption{Diagramma UML del \textit{namespace} \texttt{Typechecker}}
-% 	\label{fig:typechecker-uml}
-% \end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figures/typechecker.png}
+	\caption{Diagramma UML della classe \texttt{Typechecker}}
+	\label{fig:typechecker-uml}
+\end{figure}
 
-La costruzione del \texttt{CheckedAST} \`e gestista dalla classe \texttt{Typechecker}. Oltre che di costruirlo, si occupa di fare i controlli semantici sul programma. L'approccio utilizzato \`e il \emph{bidirectional typechecking}, introdotto da \cite{pierce2000local}, e prevede la distinzione di due operazioni principali nella fase di analisi semantica: \emph{check} e \emph{infer}. Per ogni nodo del \texttt{CheckedAST} \`e presente un metodo \texttt{check} che si occupa di verificarne la correttezza semantica, richiamando ricorsivamente i metodi \texttt{check} per ogni nodo figlio fino a quando non si raggiungono le foglie. In questo modo si attribuiscono le informazioni di tipo ad ogni nodo del programma.
+La costruzione del \texttt{CheckedAST} \`e gestista dalla classe \texttt{Typechecker}. Oltre che di costruirlo, si occupa di fare i controlli semantici sul programma. L'approccio utilizzato \`e il \emph{bidirectional typechecking}, introdotto da \cite{pierce2000local}, e prevede la distinzione di due operazioni principali nella fase di analisi semantica: \emph{check} e \emph{infer}.
+
+Per ogni nodo del \texttt{CheckedAST} \`e presente un metodo \texttt{check} che si occupa di verificarne la correttezza semantica, richiamando ricorsivamente i metodi \texttt{check} per ogni nodo figlio fino a quando non si raggiungono le foglie. Eseguiti tutti i controlli semantici, se questi hanno avuto successo, il metodo restituisce il nodo corrispondente del \texttt{CheckedAST}, altrimenti si genera un errore semantico.
 
 % FIXME: add examples of typechecking
+
+Allo stato attuale, il \texttt{Typechecker} effettua una sola operazione di tipo \texttt{infer}
+
 % FIXME: add infer example (only var decl)
 
 \section{\texttt{Transpiler}}
