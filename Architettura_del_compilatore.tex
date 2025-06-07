@@ -76,7 +76,7 @@ In base al carattere incontrato, si delega il compito dell'analisi lessicale ad 
 	\label{fig:parser-uml}
 \end{figure}
 
-L'analisi grammaticale \`e realizzata per mezzo della classe \texttt{Parser} e il gruppo di classi nel \textit{namespace} \texttt{AST}.
+L'analisi grammaticale \`e gestita dalla classe \texttt{Parser} che genera l'AST, rappresentato nell'omonimo \textit{namespace}, a partire dai token genrati dal \texttt{Lexer}.
 
 Partiamo dal descrivere il \textit{namespace} \texttt{AST}. Questo contiene la classe madre \texttt{Node} che rappresenta un generico nodo dell'AST. L'unico suo attributo \`e \texttt{span}, la posizione nel codice sorgente. Da essa derivano le seguenti classi astratte:
 \begin{itemize}
@@ -160,7 +160,7 @@ Per gestire la precedenza e l'associativit\`a degli operatori si usa una classe 
 \section{\texttt{Typechecker}}
 \label{sec:typechecker}
 
-L'analisi semantica \`e realizzata per mezzo del \textit{namespace} \texttt{Types}, il \textit{namespace} \texttt{CheckedAST} e la classe \texttt{Typechecker}.
+L'analisi semantica \`e realizzata con la classe \texttt{Typechecker} che si occupa di arrichire l'AST, generando il \texttt{CheckedAST}, con le informazioni di tipo rappresentate nel \textit{namespace} \texttt{Types}.
 
 \begin{figure}[H]
 	\centering
@@ -169,18 +169,17 @@ L'analisi semantica \`e realizzata per mezzo del \textit{namespace} \texttt{Type
 	\label{fig:typechecker-types}
 \end{figure}
 
-Il \textit{namespace} \texttt{Types} si occupa dell'\emph{type system} e contiene le seguenti classi:
+Il \textit{namespace} \texttt{Types} si occupa del \emph{type system} e contiene:
 \begin{itemize}
 	\item delle classi vuote per ogni tipo primitivo (\texttt{U8}, \texttt{U16}, ...);
 	\item le classi \texttt{Pointer}, \texttt{Array}, \texttt{Slice} e \texttt{Range} per i rispettivi tipi;
-	\item la classe \texttt{Type} che altro non \`e che una \textit{variante} su tutti i tipi elencati sopra.
+	\item la classe \texttt{Type}.
 \end{itemize}
-Le classi per i tipi composti contengono:
-\begin{itemize}
-	\item un riferimento al tipo \textit{interno} (nel caso del puntatore, ad esempio, il tipo del valore a cui esso punta) memorizzato come un identificatore numerico che verr\`a approfondito nella discussione del \texttt{CheckedAST};
-	\item alcuni attributi specifici per il tipo (ad esempio, la classe \texttt{Array} contiene l'attributo \texttt{size} che rappresenta la dimensione dell'array).
-\end{itemize}
-La classe \texttt{Type} \`e semplicemente un \textit{wrapper} intorno alla variante di tutte le classi viste sopra. Il motivo per il quale \`e stato scelto un \textit{sum-type} invece che una gerarchia di classi \`e che non c'\`e bisogno di allocazioni sull'\textit{heap} e consentono una maggiore \textit{type safety} nelle operazioni di conversione. La classe, inoltre, fornisce dei metodi per la creazione di tipi (\texttt{u8}, \texttt{pointer}, \texttt{array}, ...), per ottenere informazioni sul tipo (\texttt{is}, \texttt{size}, ...) e per ottenere il tipo sottostante (\texttt{as}).
+Le classi per i tipi composti contengono ciasuna le propriet\`a relative al tipo rappresentato. Ad esempio, la classe \texttt{Array} memorizza la dimensione e il tipo degli elementi, mentre \texttt{Range} memorizza il tipo dell'intervallo e se l'estremo superiore \`e incluso.
+
+La classe \texttt{Type} funge da \textit{wrapper} attorno ad un \textit{sum-type} che rappresenta un'unione disgiunta di tutte le classi viste sopra. L'adozione di un \textit{sum-type}, anzich\'e di una gerarchia di classi, consente una maggiore \textit{type safety} e una rappresentazione pi\`u efficiente senza allocazioni sull'\textit{heap}.
+
+La clase \texttt{Type} definisce dei metodi per creare dei tipi specifici (ad esempio, \texttt{u8}, \texttt{pointer}, \texttt{array}, ...), nonch\'e dei metodi di introspezione (ad esempio, \texttt{is}, \texttt{is\_integer}, \texttt{size}, ...) utili per verificare la propriet\`a di un tipo. Infine, fornisce il metodo \texttt{as} per accedere direttamente alla rappresentazione concreta del tipo.
 
 \begin{figure}[H]
 	\centering
@@ -198,7 +197,7 @@ Il \texttt{CheckedAST} \`e una struttura analoga all'\texttt{AST} originale, ma 
 	\label{fig:checked-ast-program-uml}
 \end{figure}
 
-La classe \texttt{Program} \`e particolarmente importante in quanto contiene una serie di attributi che cade sotto il termine ombrello di \emph{tabella dei simboli}:
+All'interno del \texttt{CheckedAST} viene definita la classe \texttt{Program}. Questa \`e particolarmente importante in quanto contiene una serie di attributi che cade sotto il termine ombrello di \emph{tabella dei simboli}:
 \begin{itemize}
 	\item \texttt{scopes}: \`e una lista di oggetti di tipo \texttt{Scope} che rappresentano gli \emph{scope} (ambito di visibilit\`a) del programma, ovvero la porzione di codice in cui una variabile \`e visibile e utilizzabile; ognuno di questi contiene un riferimento opzionale allo \textit{scope} genitore.
 	\item \texttt{functions}: \`e una lista di oggetti di tipo \texttt{Function} che contiene tutte le funzioni dichiarate nel programma, costituite da:
@@ -228,15 +227,41 @@ La classe \texttt{Program} \`e particolarmente importante in quanto contiene una
 	\label{fig:typechecker-uml}
 \end{figure}
 
-La costruzione del \texttt{CheckedAST} \`e gestista dalla classe \texttt{Typechecker}. Oltre che di costruirlo, si occupa di fare i controlli semantici sul programma. L'approccio utilizzato \`e il \emph{bidirectional typechecking}, introdotto da \cite{pierce2000local}, e prevede la distinzione di due operazioni principali nella fase di analisi semantica: \emph{check} e \emph{infer}.
+Una volta delineate le basi strutturali del \texttt{Typechecker}, si pu\`o passare a descrivere il suo compito e funzionamento. Oltre che di costruirlo, si occupa di fare i controlli semantici sul programma. L'approccio utilizzato \`e il \emph{bidirectional typechecking}, introdotto da \cite{pierce2000local}.
+\begin{parcolumns}[colwidths={1=0.44\textwidth,2=0.44\textwidth},rulebetween=true,nofirstindent=true,sloppy=true]{2}
+	% LTeX: language=en_us
+	\colchunk{
+		\leftskip=1em
+		``[\dots] the typechecker operates two distinct modes: \emph{synthesis} mode, where typing information is propagated upward from subexpressions, and \emph{checking} mode, where information is propagated downward from enclosing expressions. Synthesis mode [\dots] is used when we do not know anything about the expected type of an expression [\dots]. Checking mode is used when the surrounding context determines the type of the expression and we only need to check that it does have that type.''
+	}
+	% LTeX: language=it
+	\colchunk{
+		\leftskip=1em
+		``[\dots] il typechecker opera in due modalit\`a distinte: la modalit\`a di \emph{sintesi}, dove le informazioni di tipo vengono propagate verso l'alto dalle sottoespressioni, e la modalit\`a di \emph{controllo}, dove le informazioni vengono propagate verso il basso dalle espressioni pi\`u esterne. La modalit\`a di sintesi [\dots] \`e usata quando non sappiamo nulla sul tipo atteso di un'espressione [\dots]. La modalit\`a di controllo \`e usata quando il contesto circostante determina il tipo dell'espressione e bisogna solo controllare che abbia quel tipo.''
+	}
+	\colplacechunks
+\end{parcolumns}
 
-Per ogni nodo del \texttt{CheckedAST} \`e presente un metodo \texttt{check} che si occupa di verificarne la correttezza semantica, richiamando ricorsivamente i metodi \texttt{check} per ogni nodo figlio fino a quando non si raggiungono le foglie. Eseguiti tutti i controlli semantici, se questi hanno avuto successo, il metodo restituisce il nodo corrispondente del \texttt{CheckedAST}, altrimenti si genera un errore semantico.
+In seguito ci riferiremo alla modalit\`a di controllo con \emph{check} e a quella di sintesi con \emph{infer}, per riflettere meglio la terminologia usata nel \texttt{Typechecker}.
 
-% FIXME: add examples of typechecking
+Ogni nodo del \texttt{CheckedAST} viene verificato tramite un metodo \texttt{check} apposito che si occupa di verificarne la correttezza semantica, richiamando ricorsivamente i metodi \texttt{check} per ogni nodo figlio fino a quando non si raggiungono le foglie. Eseguiti tutti i controlli semantici, se questi hanno avuto successo, il metodo restituisce il nodo corrispondente del \texttt{CheckedAST}, altrimenti si genera un errore semantico.
 
-Allo stato attuale, il \texttt{Typechecker} effettua una sola operazione di tipo \texttt{infer}
+Attualmente, il \texttt{Typechecker} effettua una sola operazione di tipo \textit{infer}. Questa si trova nella gestione delle dichiarazioni delle variabili con tipo implicito. In questo caso, si analizzer\`a l'inizializzatore della variabile con una chiamata a \texttt{check\_expression} e, in caso di successo, si otterr\`a il tipo dell'espressione. Questo tipo viene dunque utilizzato come tipo della variabile dichiarata.\footnote{Sull'inferenza, e come questa pu\`o essere utilizata nel futuro del linguaggio, si discuter\`a nelle conclusioni.}
 
-% FIXME: add infer example (only var decl)
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+fn foo(): i32 { 42 }
+
+fn main(): void {
+    var a = foo();
+}
+  \end{minted}
+	\caption{Esempio d'inferenza del tipo di una variabile}
+	\label{fig:typechecker-var-decl-infer}
+\end{figure}
+
+Nel codice riportato qui sopra la variabile \texttt{a} viene dichiarata senza un tipo esplicito, dunque il \texttt{Typechecker} deve analizzare l'espressione inizializzata. Analizzandola, trova una chiamata di funzione; la funzione richiamata è \texttt{foo}, le cui informazioni sono reperibili nella lista functions del programma. Trovata la funzione, si osserva che il suo tipo di ritorno è \texttt{i32}. È possibile dunque concludere che il tipo della chiamata di funzione sarà lo stesso e, di conseguenza, anche quello della variabile.
 
 \section{\texttt{Transpiler}}
 \label{sec:transpiler}

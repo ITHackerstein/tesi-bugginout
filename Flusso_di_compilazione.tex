@@ -590,7 +590,7 @@ Per la traduzione dei tipi, si effettuano le seguenti operazioni:
 	\item i tipi primitivi vengono tradotti cos\`i come sono grazie a degli alias definiti dal \emph{prelude};
 	\item gli \emph{array} vengono tradotti in \texttt{std::array};
 	\item gli \emph{slice} vengono tradotti in \texttt{std::span};
-	\item i range vengono tradotti nel tipo \texttt{bo\_range} definito nel \emph{prelude}\footnote{Si veda il capitolo \ref{chap:architettura-del-compilatore} per un approfondimento su questo tipo.};
+	\item i range vengono tradotti nel tipo \texttt{bo\_range} definito nel \emph{prelude};
 	\item i puntatori vengono tradotti usando la sintassi dei puntatori C++ (ovvero \texttt{type*})\footnote{\`E bene notare che quindi un puntatore, \emph{weak} o \emph{strong} che sia, viene tradotto nello stesso tipo. \`E possibile farlo in quanto la compatibilit\`a dei tipi \`e garantita dalla fase di analisi semantica.};
 \end{itemize}
 
