@@ -266,5 +266,86 @@ Nel codice riportato qui sopra la variabile \texttt{a} viene dichiarata senza un
 \section{\texttt{Transpiler}}
 \label{sec:transpiler}
 
+La generazione del codice \`e gestita interamente dalla classe \texttt{Transpiler}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figures/transpiler.png}
+	\caption{Diagramma UML della classe \texttt{Transpiler}}
+	\label{fig:transpiler-uml}
+\end{figure}
+
+Il \texttt{Transpiler} riceve il programma anlizzato semanticamente e genera il codice C++ con il metodo \texttt{transpile}.
+
+Questo metodo generer\`a in ordine, le seguenti parti di codice:
+\begin{itemize}
+	\item \emph{prelude}, il primo frammento di codice inserito nel programma;
+	\item prototipi delle funzioni, rendendo possibile la ricorsione e l'utilizzo delle funzioni prima di essere dichiarate;
+	\item dichiarazioni delle funzioni;
+	\item \texttt{main}, la funzione principale del programma costituita da una sola chiamata alla funzione principale del programma BugginOut rinominata in \texttt{bo\_main}.
+\end{itemize}
+
+Il \textit{prelude} \`e molto importante ed \`e costituito da:
+\begin{itemize}
+	\item inclusioni delle librerie necessarie per il programma;
+	\item alias per i tipi primitivi, in modo da poter utilizzare i tipi di BugginOut come \texttt{i32} o \texttt{u8} senza dover scrivere \texttt{std::int32\_t} o \texttt{std::uint8\_t};
+	\item definizione dei suffissi per ciascuno dei tipi primitivi, in modo da poter utilizzare i suffissi \texttt{u8}, \texttt{i32}, \texttt{f64} e \texttt{c64} per indicare i rispettivi tipi di dato in C++;
+	\item definizione del tipo \texttt{bo\_range};
+	\item definizione delle funzioni \textit{builtin} (\texttt{print}, \texttt{println} e \texttt{readln}).
+\end{itemize}
+
+L'approccio adottato dal \texttt{Transpiler} è di tipo \textit{top-down}, in cui la generazione del codice avviene a partire dalla radice del \texttt{CheckedAST} e si propaga ricorsivamente verso i suoi discendenti. A ciascun nodo è associato un metodo specifico, che si occupa di tradurre il costrutto corrispondente e invocare ricorsivamente i metodi per i nodi figli.
+
+Come anticipato nella sezione \ref{sec:generazione-del-codice}, molti dei costrutti sono banali da tradurre in C++. Infatti, ad esempio:
+
+% FIXME: add some small code examples
+
+Ci\`o che invece richiede pi\`u accortezza sono i tipi, le espressioni di blocco e le espressioni \texttt{if}.
+
+Per i tipi, si eseguono le seguenti operazioni:
+\begin{itemize}
+	\item se il tipo \`e primitivo, si traduce direttamente in C++ grazie all'alias definito nel \textit{prelude};
+	\item se il tipo \`e un puntatore, si traduce in C++ come un puntatore al tipo sottostante, perdendo, per\`o, il suo genere (\textit{weak} o \textit{strong})\footnote{Questo non ha importanza, in quanto i controlli semantici su questo sono gi\`a stati superati.};
+	\item se il tipo \`e un'array, allora lo si traduce nel tipo \texttt{std::array<T, N>} con \texttt{T} tipo degli elementi e \texttt{N} dimensione dell'array;
+	\item se il tipo \`e uno \textit{slice}, si traduce in C++ come un \texttt{std::span<T>} con \texttt{T} il tipo degli elementi;
+	\item se il tipo \`e un \textit{range}, lo si traduce in \newline \texttt{bo\_range<ElementType, is\_inclusive>}.
+\end{itemize}
+
+Il tipo \texttt{bo\_range}, come gi\`a specificato, \`e definito nel prelude e rappresenta un intervallo di valori iterabile, parametrizzato sul tipo degli elementi (\texttt{ElementType}) e un flag booleano (\texttt{is\_inclusive}) che indica se l'estremo superiore \`e incluso o meno.
+
+Per ci\`o che riguarda invece le espressioni di blocco e le espressioni \texttt{if}, queste vengono tradotte in C++ con un'estensione del compilatore detta \textit{compound statements}\footnote{Vedi \url{https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html}.}. Questa estensione \`e disponibile soo nei compilatori GNU e Clang e permette, attraverso una particolare sintassi, di restituire un valore da un blocco. Ad esempio:
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{cpp}
+int abs = ({
+    int y = foo();
+    int z;
+    if (y > 0) z = y;
+    else z = -y;
+    z;
+})
+	\end{minted}
+	\label{fig:compound-statement-example}
+	\caption{Esempio di utilizzo di un \textit{compound statement} in C++ per calcolare il valore assoluto di \texttt{foo}}
+\end{figure}
+
+L'ulteriore componente necessaria alla loro traduzione \`e la distinzione delle espressioni di blocco in base al loro contesto di utilizzo:
+\begin{itemize}
+	\item se il blocco \`e il corpo di un ciclo \texttt{for} o di un'espressione \texttt{if} che non restituisce un valore, allora lo si traduce come un normale blocco ignorando l'eventuale valore restituito;
+	\item se il blocco \`e il corpo di una funzione, allora lo si traduce come un normale blocco trasformando l'eventuale valore restituito in un \textit{return}.
+\end{itemize}
+
+% FIXME: add some examples
+
+Le espressioni \texttt{if} restituenti un valore, invece, vengono tradotte come un \textit{compound statement} in cui si dichiara una variable temporanea, si traduce l'espressione \texttt{if} assegnando il valore restituito dai blocchi \textit{then} e \textit{else} a questa variabile e, alla fine del blocco, si restituisce il valore della variabile temporanea.
+
+\`E bene notare che le espressioni \texttt{if} potrebbero essere innestate e, dunque, c'\`e bisogno che la variabile temporanea abbia sempre un nome univoco. Per fare questo si utilizza un contatore, l'attributo \texttt{m\_temp\_variable\_iota}, che viene incrementato quando si genera una nuova variabile temporanea e decrementato quando questa smette di essere visibile.
+
+% FIXME: add some examples
+
+Una volta generato il codice C++, la stringa restituita viene memorizzata in un file con estensione \texttt{.cpp}. Questo \`e il file sorgente dato in ingresso al compilatore C++ che restituir\`a, infine, l'eseguibile del programma finale.
+
+Il compilatore C++ utilizzato attualmente \`e \texttt{g++}, in quanto ampiamente utilizzato e, spesso, disponibile su tutti i sistemi operativi.\footnote{Di questo si parler\`a meglio nelle conclusioni.}
+
 \section{Gestione degli errori}
 \label{sec:gestione-degli-errori}
