@@ -257,7 +257,7 @@ fn main(): void {
     var a = foo();
 }
   \end{minted}
-	\caption{Esempio d'inferenza del tipo di una variabile}
+	\caption{Inferenza del tipo di una variabile}
 	\label{fig:typechecker-var-decl-infer}
 \end{figure}
 
@@ -298,7 +298,21 @@ L'approccio adottato dal \texttt{Transpiler} è di tipo \textit{top-down}, in cu
 
 Come anticipato nella sezione \ref{sec:generazione-del-codice}, molti dei costrutti sono banali da tradurre in C++. Infatti, ad esempio:
 
-% FIXME: add some small code examples
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var a = 2;
+var b = 3;
+var c = a + b;
+	\end{minted}
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{cpp}
+i32 const a = (static_cast<i32>(2));
+i32 const b = (static_cast<i32>(3));
+i32 const c = (static_cast<i32>((a)+(b)));
+	\end{minted}
+	\caption{Traduzione di semplici istruzioni aritmetiche e di assegnamento}
+	\label{fig:transpiler-trivial-code}
+\end{figure}
 
 Ci\`o che invece richiede pi\`u accortezza sono i tipi, le espressioni di blocco e le espressioni \texttt{if}.
 
@@ -325,8 +339,8 @@ int abs = ({
     z;
 })
 	\end{minted}
+	\caption{Utilizzo di un \textit{compound statement} in C++ per calcolare il valore assoluto di \texttt{foo}}
 	\label{fig:compound-statement-example}
-	\caption{Esempio di utilizzo di un \textit{compound statement} in C++ per calcolare il valore assoluto di \texttt{foo}}
 \end{figure}
 
 L'ulteriore componente necessaria alla loro traduzione \`e la distinzione delle espressioni di blocco in base al loro contesto di utilizzo:
@@ -335,13 +349,79 @@ L'ulteriore componente necessaria alla loro traduzione \`e la distinzione delle 
 	\item se il blocco \`e il corpo di una funzione, allora lo si traduce come un normale blocco trasformando l'eventuale valore restituito in un \textit{return}.
 \end{itemize}
 
-% FIXME: add some examples
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+fn foo(): i32 { 42 }
+	\end{minted}
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{cpp}
+i32 foo()
+{
+    return static_cast<i32>(42);
+}
+	\end{minted}
+	\caption{Traduzione di un'espressione di blocco utilizzato come corpo di una funzione}
+	\label{fig:block-expr-as-function-body}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+if (a < b) {
+  println("a is less than b");
+} else if (a == b) {
+  println("a is equal to b");
+} else {
+  println("a is greater than b");
+}
+	\end{minted}
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{cpp}
+if (static_cast<bool>((a)<(b)))
+{
+    println("a is less than b"s);
+}
+else
+if (static_cast<bool>((a)==(b)))
+{
+    println("a is equal to b"s);
+}
+else
+{
+    println("a is greater than b"s);
+};
+	\end{minted}
+	\caption{Traduzione di un'espressione di blocco utilizzata in una \texttt{if} che non restituisce alcun valore}
+	\label{fig:block-expr-as-if-with-no-value}
+\end{figure}
 
 Le espressioni \texttt{if} restituenti un valore, invece, vengono tradotte come un \textit{compound statement} in cui si dichiara una variable temporanea, si traduce l'espressione \texttt{if} assegnando il valore restituito dai blocchi \textit{then} e \textit{else} a questa variabile e, alla fine del blocco, si restituisce il valore della variabile temporanea.
 
 \`E bene notare che le espressioni \texttt{if} potrebbero essere innestate e, dunque, c'\`e bisogno che la variabile temporanea abbia sempre un nome univoco. Per fare questo si utilizza un contatore, l'attributo \texttt{m\_temp\_variable\_iota}, che viene incrementato quando si genera una nuova variabile temporanea e decrementato quando questa smette di essere visibile.
 
-% FIXME: add some examples
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var x = if (a > b) { a } else { b };
+	\end{minted}
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{cpp}
+i32 const x = (({
+    i32 __block_ret_1 {};
+    if (static_cast<bool>((a)>(b)))
+    {
+        __block_ret_1 = a;
+    }
+    else
+    {
+        __block_ret_1 = ({
+            b;
+        });
+    }
+    __block_ret_1;
+}));
+	\end{minted}
+	\label{fig:if-with-value}
+	\caption{Traduzione di un'espressione \texttt{if} che restituisce un valore}
+\end{figure}
 
 Una volta generato il codice C++, la stringa restituita viene memorizzata in un file con estensione \texttt{.cpp}. Questo \`e il file sorgente dato in ingresso al compilatore C++ che restituir\`a, infine, l'eseguibile del programma finale.
 
@@ -349,3 +429,112 @@ Il compilatore C++ utilizzato attualmente \`e \texttt{g++}, in quanto ampiamente
 
 \section{Gestione degli errori}
 \label{sec:gestione-degli-errori}
+
+Nelle sezioni precedenti si \`e parlato di come \texttt{Lexer}, \texttt{Parser} e \texttt{Typechecker} potrebbero generare errori durante l'analisi. Volutamente, la loro gestione \`e stata omessa dai diagrammi UML, in quanto non facenti parte della logica principale di analisi. In questa sezione, si ovvia a questo, descrivendo come gli errori vengono gestiti e comunicati all'utente.
+
+Per gli errori, si \`e scelto di non utilizzare le eccezioni di C++ in quanto queste sono poco esplicite e non permettono di avere un controllo preciso sul flusso di esecuzione del programma. Si \`e scelto quindi di seguire un approccio, in maniera a simile a quello di Rust, in cui gli errori vengono rappresentati da un tipo \texttt{Result}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figures/result.png}
+	\caption{Diagramma UML del tipo \texttt{Result}}
+	\label{fig:result-uml}
+\end{figure}
+
+Come possiamo vedere questo altro non \`e che un \textit{sum-type} che rappresenta un'unione disgiunta di due tipi parametrizzati: il \texttt{ValueType} e l'\texttt{ErrorType}. Il primo rappresenta il valore, senza errori, mentre il secondo rappresenta l'errore. Il tipo \texttt{Result} fornisce dei metodi per verificare se esso \`e un errore o meno, per accedere al valore o all'errore.
+
+Per semplificare questa operazione vengono anche introdotte due \textit{macro}: \texttt{TRY} e \texttt{MUST}.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{cpp}
+#define TRY(expr)                  \
+  ({                               \
+    auto _tmp = (expr);            \
+    if (_tmp.is_error())           \
+      return _tmp.release_error(); \
+    _tmp.release_value();          \
+  })
+
+#define MUST(expr)           \
+  ({                         \
+    auto _tmp = (expr);      \
+    ASSERT(_tmp.is_value()); \
+    _tmp.release_value();    \
+  })
+	\end{minted}
+	\label{fig:result-macros}
+	\caption{Le \textit{macro} \texttt{TRY} e \texttt{MUST} per la gestione degli errori}
+\end{figure}
+
+La \textit{macro} \texttt{TRY} prende come parametro un espressione che restituisce un \texttt{Result} e la valuta. Se il risultato \`e un'errore allora si restiuisce l'errore e si esce dalla funzione. Altrimenti la macro restituir\`a il valore contenuto in \texttt{Result}.
+
+La macro \texttt{MUST}, invece, fallisce se l'espressione usata come parametro restituisce un errore.
+
+Fra le due, \texttt{TRY} \`e quella pi\`u utilizzata, in quanto permette di propagare gli errori in maniera semplice e diretta, senza dover gestire manualmente i ritorni di errore in ogni funzione. \texttt{MUST}, invece, \`e utile quando si vuole garantire che un'espressione restituisca un valore e non un errore, ad esempio quando si accede al valore di una variabile o di un'espressione che si sa essere valida.
+
+Di seguito, si mostra un esempio di utilizzo del tipo \texttt{Result} e della \textit{macro} \texttt{TRY} per la propagazione degli errori. In questo esempio, si implementa una semplice funzione di addizione che legge due numeri interi da input e restituisce il loro risultato, gestendo gli errori di parsing e di input.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{cpp}
+Result<int, std::string> parse_int(std::string_view input) {
+  int value;
+  auto result = std::from_chars(
+    input.data(),
+    input.data() + input.size(),
+    value
+  );
+
+  if (result.ec != std::errc()) {
+    return "Invalid integer"s;
+  }
+
+  return value;
+}
+
+Result<int, std::string> addition() {
+  std::string input;
+
+  std::getline(std::cin, input);
+  if (input.empty()) {
+    return "Input cannot be empty"s;
+  }
+  auto a = TRY(parse_int(input));
+
+  std::getline(std::cin, input);
+  if (input.empty()) {
+    return "Input cannot be empty"s;
+  }
+  auto b = TRY(parse_int(input));
+
+  return a + b;
+}
+
+int main() {
+  auto result = addition();
+  if (result.is_error()) {
+    std::cerr << "Error: " << result.release_error() << std::endl;
+    return 1;
+  }
+
+  std::cout << "Result: " << result.release_value() << std::endl;
+  return 0;
+}
+	\end{minted}
+	\label{fig:result-usage-example}
+	\caption{Utilizzo del tipo \texttt{Result} e della \textit{macro} \texttt{TRY} per la propagazione degli errori}
+\end{figure}
+
+Nel compilatore, l'\texttt{ErrorType} utilizzato \`e proprio la classe \texttt{Error}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/error.png}
+	\caption{Diagramma UML della classe \texttt{Error}}
+	\label{fig:error-uml}
+\end{figure}
+
+Questa contiene una semplice stringa, il messaggio d'errore, e la posizione del codice sorgente a cui l'errore fa riferimento.
+
+Gli errori generati dalle sezioni precedenti, si propagano fino ad arrivare alla funzione principale del compilatore che li stamper\`a a schermo, come \`e stato anche visto negli esempi \ref{fig:bugginout-syntax-error}, \ref{fig:unknown-identifier-error}, \ref{fig:invalid-binary-operation-error} e \ref{fig:invalid-return-type-error}.

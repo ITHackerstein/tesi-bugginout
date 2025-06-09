@@ -333,8 +333,8 @@ Vediamo alcuni costrutti sintattici di BugginOut scritti in BNF (\textit{Backus-
   "fn" <Identifier> "(" <function_parameters>? ")" ":" <Type>
   <BlockExpression>
   \end{minted}
-	\label{fig:bugginout-function-declaration}
 	\caption{Grammatica per la dichiarazione di una funzione}
+	\label{fig:bugginout-function-declaration}
 \end{figure}
 
 In questo esempio possiamo notare che una dichiarazione di funzione \`e definita, in ordine, da:
@@ -359,15 +359,16 @@ fn add(a: i32, b: i32): i32 {
   a + b
 }
 	\end{minted}
-	\label{fig:bugginout-example-function-declaration}
 	\caption{Semplice dichiarazione di funzione in BugginOut}
+	\label{fig:bugginout-example-function-declaration}
 \end{figure}
 
 L'analizzatore grammaticale, per la funzione dichiarata nell'esempio precedente, generer\`a il seguente AST:\footnote{Nell'AST riportato \`e stato omesso, per ogni nodo, il figlio \texttt{span} che non \`e rilevante per la sua analisi (si veda il capitolo \ref{chap:architettura-del-compilatore}).}
 \begin{figure}[H]
+	\centering
 	\includegraphics[width=\textwidth]{figures/function_declaration_ast.png}
-	\label{fig:bugginout-example-function-declaration-ast}
 	\caption{AST generato per la funzione nell'esempio precedente}
+	\label{fig:bugginout-example-function-declaration-ast}
 \end{figure}
 Come possiamo vedere, la radice \`e il nodo \texttt{FunctionDeclarationStatement} che ha come figli:
 \begin{itemize}
@@ -397,8 +398,8 @@ Un altro esempio interessante \`e la definizione delle espressioni binarie:
   ("+" | "-" | "*" | "/" | "%" | "<<" | ">>" | "<" | ">" | "<=" | ">=" | "==" | "!=" | "&" | "^" | "|" | "&&" | "||")
   <Expression>
 	\end{minted}
-	\label{fig:bugginout-binary-expression}
 	\caption{Grammatica per le espressioni binarie}
+	\label{fig:bugginout-binary-expression}
 \end{figure}
 
 Il motivo per cui ci interessa analizzare questa regola \`e la sua \emph{ambiguit\`a}, ci\`o significa che esistono pi\`u modi d'interpretare la stessa espressione. Ad esempio, l'espressione \texttt{a + b * c} pu\`o essere interpretata in due modi diversi:
@@ -445,8 +446,8 @@ error.bo: Expected "RightParenthesis", got "RightCurlyBracket"!
    3 | }
        ^
 	\end{minted}
-	\label{fig:bugginout-syntax-error}
 	\caption{Errore sintattico generato nel caso di parentesi non bilanciate}
+	\label{fig:bugginout-syntax-error}
 \end{figure}
 In questo caso l'analizzatore grammaticale genera un errore e termina l'esecuzione. Questo approccio di gestione degli errori \`e il pi\`u semplice e non \`e in grado di recuperare gli errori\footnote{Su questo tema si spenderanno alcune parole nella sezione \ref{sec:limiti}.}.
 
@@ -532,8 +533,8 @@ not_declared.bo: Unknown identifier
    2 |   var c = a + b;
                      ^
 	\end{minted}
-	\label{fig:unknown-identifier-error}
 	\caption{Errore semantico generato per una variabile non dichiarata}
+	\label{fig:unknown-identifier-error}
 \end{figure}
 
 \begin{figure}[H]
@@ -548,8 +549,8 @@ invalid_operation.bo: Incompatible types for binary operation
    2 |   return 1 + "2";
                 ^^^^^^^
 	\end{minted}
-	\label{fig:invalid-binary-operation-error}
 	\caption{Errore semantico generato per un'operazione non valida}
+	\label{fig:invalid-binary-operation-error}
 \end{figure}
 
 \begin{figure}[H]
@@ -564,8 +565,8 @@ invalid_return.bo: Incompatible return types
    2 |     return "10";
            ^^^^^^^^^^^^
 	\end{minted}
-	\label{fig:invalid-return-type-error}
 	\caption{Errore semantico generato per un tipo di ritorno non valido}
+	\label{fig:invalid-return-type-error}
 \end{figure}
 
 \`E importante notare che gli errori semantici sono corretti dal punto di vista della grammatica del linguaggio, ma violano la logica del linguaggio. Trovare questi errori in fase di compilazione, prima dell'esecuzione di un programma, rende il codice pi\`u robusto e riduce il rischio di comportamenti imprevisti.
