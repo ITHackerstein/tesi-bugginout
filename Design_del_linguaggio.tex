@@ -3,11 +3,73 @@
 \chapter{Design del linguaggio}
 \label{chap:design-del-linguaggio}
 
-\section{Sintassi}
-\label{sec:sintassi}
+In questo capitolo si affronter\`a il design del linguaggio e le scelte progettuali perseguite. Tali scelte sono state fatte con l'obiettivo di rendere il linguaggio moderno, semplice e chiaro. Discuteremo per prima cosa dei tipi di dato disponibili, la sintassi e il controllo del flusso.
 
 \section{Tipi di dato}
 \label{sec:tipi-di-dato}
 
-\section{Control flow}
-\label{sec:control-flow}
+I tipi di dato in BugginOut si distinguono in scalari e composti. I tipi scalari rappresentano un singolo valore indivisibile, mentre un tipo composto da pi\`u valori.
+
+\begin{xltabular}{\textwidth}{X|X}
+	\caption{Tipi scalari in BugginOut}
+	\label{fig:bugginout-scalar-types} \\
+
+	\hline
+	\hline
+	\multicolumn{1}{c|}{\textsc{Nome del tipo}} & \multicolumn{1}{c}{\textsc{Descrizione}} \\
+	\hline
+	\endfirsthead
+
+	\hline
+	\multicolumn{1}{c|}{\textsc{Nome del tipo}} & \multicolumn{1}{c}{\textsc{Descrizione}} \\
+	\hline
+	\endhead
+
+	\endfoot
+
+	\hline
+	\hline
+	\endlastfoot
+
+	\texttt{u8} & Intero senza segno a 8 bit \\ \hline
+	\texttt{u16} & Intero senza segno a 16 bit \\ \hline
+	\texttt{u32} & Intero senza segno a 32 bit \\ \hline
+	\texttt{u64} & Intero senza segno a 64 bit \\ \hline
+	\texttt{usize} & Intero senza segno con dimensione pari a quella di un puntatore \\ \hline
+	\texttt{i8} & Intero con segno a 8 bit \\ \hline
+	\texttt{i16} & Intero con segno a 16 bit \\ \hline
+	\texttt{i32} & Intero con segno a 32 bit \\ \hline
+	\texttt{i64} & Intero con segno a 64 bit \\ \hline
+	\texttt{isize} & Intero con segno con dimensione pari a quella di un puntatore \\ \hline
+	\texttt{f32} & Numero in virgola mobile a 32 bit \\ \hline
+	\texttt{f64} & Numero in virgola mobile a 64 bit \\ \hline
+	\texttt{char} & Carattere ASCII \\ \hline
+	\texttt{bool} & Valore booleano \\ \hline
+\end{xltabular}
+
+I tipi composti sono gli \emph{array}, gli \emph{slice}, i \emph{puntatori} e le \emph{stringhe}.
+
+\subsection{Array}
+
+Un array \`e una collezione statica, omogena e continua di elementi denotata con \texttt{[size]type}, dove \texttt{size} \`e la dimensione dell'array e \texttt{type} \`e il tipo dei suoi elementi. Possono essere creati racchiudendo la lista degli elementi separata da virgole tra parentesi quadre.
+
+\subsection{Slice}
+
+Uno slice \`e una vista continua e dinamica su una sequenza omogenea di elementi in memoria che non possiede direttamente i dati ma mantiene un puntatore all'inizio della sequenza e una lunghezza. Si denota con \texttt{[]type}, dove \texttt{type} \`e il tipo degli elementi. Inoltre, se si vuole modificare gli elementi dello slice, si inserire \texttt{mut} dopo le parentesi quadre.
+
+\subsection{Puntatori}
+
+Un puntatore \`e un oggetto che memorizza un indirizzo di memoria e il tipo a cui fa riferimento. Possono essere \textit{strong} o \textit{weak}; un puntatore \textit{strong} non pu\`o essere \texttt{null} e si denota con \texttt{\^type}, mentre un puntatore \textit{weak} pu\`o essere \texttt{null} e si denota con \texttt{*type}. Inoltre, se si vuole modificare il valore a cui punta il puntatore, si inserisce \texttt{mut} dopo il simbolo del puntatore.
+
+\subsection{Stringhe}
+
+Una stringa \`e una sequenza mutabile di caratteri ASCII denotata con \texttt{string}.
+
+% \section{Sintassi}
+% \label{sec:sintassi}
+%
+% \section{Tipi di dato}
+% \label{sec:tipi-di-dato}
+%
+% \section{Control flow}
+% \label{sec:control-flow}
