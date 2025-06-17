@@ -3,7 +3,7 @@
 \chapter{Design del linguaggio}
 \label{chap:design-del-linguaggio}
 
-In questo capitolo si affronter\`a il design del linguaggio e le scelte progettuali perseguite. Tali scelte sono state fatte con l'obiettivo di rendere il linguaggio moderno, semplice e chiaro. Discuteremo per prima cosa dei tipi di dato disponibili, la sintassi e il controllo del flusso.
+In questo capitolo si affronter\`a il design del linguaggio e le scelte progettuali perseguite con l'obiettivo di rendere il linguaggio moderno, semplice e chiaro.
 
 \section{Tipi di dato}
 \label{sec:tipi-di-dato}
@@ -47,29 +47,423 @@ I tipi di dato in BugginOut si distinguono in scalari e composti. I tipi scalari
 	\texttt{bool} & Valore booleano \\ \hline
 \end{xltabular}
 
-I tipi composti sono gli \emph{array}, gli \emph{slice}, i \emph{puntatori} e le \emph{stringhe}.
+I tipi composti sono gli \emph{array}, gli \emph{slice}, i \emph{puntatori}, le \emph{stringhe} e i \emph{range}.
 
 \subsection{Array}
+\label{ssec:array}
 
-Un array \`e una collezione statica, omogena e continua di elementi denotata con \texttt{[size]type}, dove \texttt{size} \`e la dimensione dell'array e \texttt{type} \`e il tipo dei suoi elementi. Possono essere creati racchiudendo la lista degli elementi separata da virgole tra parentesi quadre.
+Un \emph{array} \`e una collezione statica, omogenea e continua di elementi denotata con \texttt{[S]T}, dove \texttt{S} \`e la dimensione dell'array e \texttt{T} \`e il tipo dei suoi elementi. Possono essere creati racchiudendo la lista degli elementi separata da virgole tra parentesi quadre.
+
+\`E possibile accedere agli elementi di un array tramite l'indice, che parte da 0, utilizzando la sintassi \texttt{array[index]}. Inoltre, \`e possibile accedere alla dimensione dell'array tramite la propriet\`a \texttt{size}.
 
 \subsection{Slice}
+\label{ssec:slice}
 
-Uno slice \`e una vista continua e dinamica su una sequenza omogenea di elementi in memoria che non possiede direttamente i dati ma mantiene un puntatore all'inizio della sequenza e una lunghezza. Si denota con \texttt{[]type}, dove \texttt{type} \`e il tipo degli elementi. Inoltre, se si vuole modificare gli elementi dello slice, si inserire \texttt{mut} dopo le parentesi quadre.
+Uno \emph{slice} \`e una vista continua e dinamica su una sequenza omogenea di elementi in memoria che non possiede direttamente i dati ma mantiene un puntatore all'inizio della sequenza e una lunghezza. Si denota con \texttt{[]T}, dove \texttt{T} \`e il tipo degli elementi. Inoltre, se si vuole modificare gli elementi dello slice, bisogna inserire \texttt{mut} dopo le parentesi quadre.
+
+Come gli array, gli slice supportano l'accesso agli elementi tramite l'indice e la propriet\`a \texttt{size} per ottenere la lunghezza dello slice.
 
 \subsection{Puntatori}
+\label{ssec:puntatori}
 
-Un puntatore \`e un oggetto che memorizza un indirizzo di memoria e il tipo a cui fa riferimento. Possono essere \textit{strong} o \textit{weak}; un puntatore \textit{strong} non pu\`o essere \texttt{null} e si denota con \texttt{\^type}, mentre un puntatore \textit{weak} pu\`o essere \texttt{null} e si denota con \texttt{*type}. Inoltre, se si vuole modificare il valore a cui punta il puntatore, si inserisce \texttt{mut} dopo il simbolo del puntatore.
+Un \emph{puntatore} \`e un oggetto che memorizza un indirizzo di memoria e il tipo a cui fa riferimento. Possono essere \textit{strong} o \textit{weak}; un puntatore \textit{strong} non pu\`o essere \texttt{null} e si denota con \texttt{\^T}, mentre un puntatore \textit{weak} pu\`o essere \texttt{null} e si denota con \texttt{*T}. Inoltre, se si vuole modificare il valore a cui punta il puntatore, si inserisce \texttt{mut} dopo il simbolo del puntatore.
+
+Per ottenere il valore a cui punta un puntatore si utilizza l'operatore di \emph{dereferenziazione} \texttt{@}. Ad esempio, se \texttt{ptr} \`e un puntatore, \texttt{@ptr} restituisce il valore a cui punta.
 
 \subsection{Stringhe}
+\label{ssec:stringhe}
 
-Una stringa \`e una sequenza mutabile di caratteri ASCII denotata con \texttt{string}.
+Una \emph{stringa} \`e una sequenza mutabile di caratteri ASCII denotata con \texttt{string}. \`E possibile creare una stringa racchiudendo i caratteri tra virgolette doppie (ad esempio \texttt{"asd"}).
 
-% \section{Sintassi}
-% \label{sec:sintassi}
-%
-% \section{Tipi di dato}
-% \label{sec:tipi-di-dato}
-%
-% \section{Control flow}
-% \label{sec:control-flow}
+Come gli array e gli slice, supportano l'accesso ai caratteri tramite l'indice e la propriet\`a \texttt{size} per ottenere la lunghezza della stringa.
+
+\subsection{Range}
+\label{ssec:range}
+
+Un \emph{range} \`e una sequenza di valori compresi tra due estremi, denotata con \texttt{a ..< b} o \texttt{a ..= b}, dove \texttt{a} \`e l'estremo inferiore e \texttt{b} l'estremo superiore. Il range \texttt{a ..< b} include l'estremo inferiore ma non quello superiore, mentre il range \texttt{a ..= b} include entrambi gli estremi.
+
+\section{Sintassi}
+\label{sec:sintassi}
+
+Descritti i tipi di dato, \`e ora possibile passare alla sintassi del linguaggio.
+
+\subsection{Commenti}
+\label{ssec:commenti}
+
+Un \emph{commento} \`e una porzione di codice ignorata in fase di compilazione e possono essere di due tipi:
+\begin{itemize}
+	\item \emph{inline}: iniziano con \texttt{//} e terminano alla fine della riga; sono utilizzati per commenti brevi e specifici;
+	\item \emph{multiline}: iniziano con \texttt{/*} e terminano con \texttt{*/}; sono utilizzati per commenti pi\`u lunghi e complessi.
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+// Questo è un commento inline
+/* Questo è un commento multiline
+   che può estendersi su più righe */
+	\end{minted}
+	\caption{Commenti in BugginOut}
+	\label{fig:comments-example}
+\end{figure}
+
+\subsection{Letterali}
+\label{ssec:letterali}
+
+Un \emph{letterale} \`e una costante scritta esplicitamente nel codice sorgente per rappresentare un valore specifico. Ne esistono diversi in base al tipo del valore che rappresentano e sono:
+
+\subsubsection{Interi}
+
+I letterali per i numeri interi sono divisi in tre parti:
+	\begin{itemize}
+		\item prefisso (opzionale): specificano la base del numero e pu\`o essere (\texttt{0b} per binario, \texttt{0o} per l'ottale e \texttt{0x} per l'esadecimale), se non specificato \`e decimale.
+		\item numero: la parte numerica del letterale;
+		\item suffisso (opzionale): specifica il tipo del letterale, inizia sempre con \texttt{\_} e pu\`o essere uno dei tipi interi specificati precedentemente; se non specificato il tipo viene dedotto dal contesto o, se non \`e possibile farlo, \`e \texttt{i32}.
+	\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+123
+0b1010
+0o755
+0xdeadbeef
+132_u64
+	\end{minted}
+	\caption{Alcuni letterali interi in BugginOut}
+	\label{fig:integer-literals-example}
+\end{figure}
+
+\subsubsection{Numeri in virgola mobile}
+
+	I letterali per numeri in virgola mobile sono divisi in due parti:
+\begin{itemize}
+	\item numero: la parte numerica del letterale;
+	\item suffisso (opzionale): specifica il tipo del letterale, inizia sempre con \texttt{\_} e pu\`o essere uno dei tipi in virgola mobile specificati nel linguaggio; se non specificato il tipo \`e \texttt{f32}.
+\end{itemize}
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+1.0
+10.1234_f64
+	\end{minted}
+	\caption{Alcuni letterali a virgola mobile in BugginOut}
+	\label{fig:float-literals-example}
+\end{figure}
+
+\subsubsection{Caratteri}
+
+I letterali per caratteri sono racchiusi tra virgolette singole e, oltre a poter contenere un singolo carattere, supportano anche le seguenti sequenze di \textit{escape} per specificare caratteri specaili:
+\begin{itemize}
+	\item \verb|\'|: l'apice singolo;
+	\item \verb|\n|: la nuova linea;
+	\item \verb|\t|: la tabulazione;
+	\item \verb|\r|: il ritorno a capo;
+	\item \verb|\0|: il carattere nullo;
+	\item \verb|\xNN|: il carattere con codice ASCII esadecimale \texttt{NN};
+	\item \verb|\\|: il backslash.
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+'a'
+'\n'
+'\x41'
+	\end{minted}
+	\caption{Alcuni caratteri in BugginOut}
+	\label{fig:char-literals-example}
+\end{figure}
+
+\subsubsection{Stringhe}
+
+I letterali per stringhe sono racchiusi tra virgolette doppie e possono contenere zero o pi\`u caratteri specificati come descritto per i caratteri, incluse le sequenze di escape. Inoltre, \`e possibile specificare la virogletta doppia all'interno della stringa utilizzando la sequenza di escape \verb|\"|.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+""
+"abc"
+"\x41\x42\x43\n"
+	\end{minted}
+	\caption{Alcune stringhe in BugginOut}
+	\label{fig:string-literals-example}
+\end{figure}
+
+\subsubsection{Booleani}
+
+Per i valori booleani esistono due letterali: \texttt{true} e \texttt{false}. Come \`e possibile intuire, \texttt{true} \`e rappresenta il valore vero, mentre \texttt{false} rappresenta il valore falso.
+
+\subsubsection{\texttt{null}}
+
+Il letterale \texttt{null} \`e un valore speciale che pu\`o essere utilizzato con i puntatori deboli per indicare che il puntatore non punta a nessun valore.
+
+\subsection{Variabili}
+\label{ssec:variabili}
+
+Una \emph{variabile} \`e un identificatore che rappresenta un valore memorizzato in memoria. La loro dichiarazione \`e formata da tre parti:
+\begin{itemize}
+	\item \emph{nome} della variabile preceduta dalla parola chiave \texttt{var}; pu\`o essere formato da lettere, il carattere di sottolineatura \texttt{\_} e numeri (questi ultimi non possono essere il primo carattere);
+	\item \emph{tipo} della variabile preceduto da due punti (opzionale);
+	\item \emph{valore} iniziale della variabile preceduto dall'uguale.
+\end{itemize}
+
+\`E bene notare che, se il tipo della variabile non \`e specificato, il compilatore lo deduce automaticamente dal valore iniziale che deve essere, quindi, presente. Inoltre, se si vuole che la variabile sia mutabile, si inserisce la parola chiave \texttt{mut}, invece che \texttt{var}, prima del nome della variabile.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var a = 10;
+var b: i64 = 10;
+mut c: f32;
+	\end{minted}
+	\caption{Alcune dichiarazione di variabili in BugginOut}
+	\label{fig:variables-example}
+\end{figure}
+
+\subsection{Espressioni}
+\label{ssec:espressioni}
+
+Un'\emph{espressione} \`e una combinazione di valori, variabili, operatori e funzioni che produce un nuovo valore. Si distinguono dalle normali \emph{istruzioni}, denotate come \emph{statement}, che non restituiscono un valore e terminano con un punto e virgola.
+
+\begin{xltabular}{\textwidth}{X|X}
+	\caption{Gli operatori in BugginOut, ordinati per precedenza (pi\`u alto in cima)}
+	\label{fig:bugginout-operators} \\
+
+	\hline
+	\hline
+	\multicolumn{1}{c|}{\textsc{Operatore}} & \multicolumn{1}{c}{\textsc{Descrizione}} \\
+	\hline
+	\endfirsthead
+
+	\hline
+	\multicolumn{1}{c|}{\textsc{Operatore}} & \multicolumn{1}{c}{\textsc{Descrizione}} \\
+	\hline
+	\endhead
+
+	\endfoot
+
+	\hline
+	\hline
+	\endlastfoot
+
+	\makecell[X]{\texttt{a++}, \texttt{a--} \\ \texttt{a[]} \\ \texttt{a()} \\ \texttt{a.b}} & \makecell[X]{Incremento e decremento postfisso \\ Indicizzazione \\ Chiamata di funzione \\ Accesso a propriet\`a} \\ \hline
+	\makecell[X]{\texttt{++a}, \texttt{--a} \\ \texttt{+a}, \texttt{-a} \\ \texttt{!a} \\ \texttt{\textasciitilde a} \\ \texttt{@a} \texttt{\&a}} & \makecell[X]{Incremento e decremento prefisso \\ Negazione \\ Negazione logica \\ Negazione bit a bit \\ Dereferenziazione e riferimento} \\ \hline
+	\makecell[X]{\texttt{a as T}} & \makecell[X]{Casting} \\ \hline
+	\makecell[X]{\texttt{a * b}, \texttt{a / b}, \texttt{a \% b}} & \makecell[X]{Moltiplicazione, divisione e modulo} \\ \hline
+	\makecell[X]{\texttt{a + b}, \texttt{a - b}} & \makecell[X]{Addizione e sottrazione} \\ \hline
+	\makecell[X]{\texttt{a << b}, \texttt{a >> b}} & \makecell[X]{Shift a sinistra e a destra} \\ \hline
+	\makecell[X]{\texttt{a < b}, \texttt{a > b}, \texttt{a <= b}, \texttt{a >= b}} & \makecell[X]{Confronto} \\ \hline
+	\makecell[X]{\texttt{a == b}, \texttt{a != b}} & \makecell[X]{Uguaglianza e disuguaglianza} \\ \hline
+	\makecell[X]{\texttt{a \& b}} & \makecell[X]{AND bit a bit} \\ \hline
+	\makecell[X]{\texttt{a \textasciicircum{} b}} & \makecell[X]{XOR bit a bit} \\ \hline
+	\makecell[X]{\texttt{a | b}} & \makecell[X]{OR bit a bit} \\ \hline
+	\makecell[X]{\texttt{a \&\& b}} & \makecell[X]{AND logico} \\ \hline
+	\makecell[X]{\texttt{a || b}} & \makecell[X]{OR logico} \\ \hline
+	\makecell[X]{\texttt{a ..< b}, \texttt{a ..= b}} & \makecell[X]{Range} \\ \hline
+	\makecell[X]{\texttt{a = b} \\ \texttt{a += b}, \texttt{a -= b} \\ \texttt{a *= b}, \texttt{a /= b}, \texttt{a \%= b} \\ \texttt{a <<= b}, \texttt{a >>= b} \\ \texttt{a \&= b}, \texttt{a \textasciicircum{}= b}, \texttt{a |= b} \\ \texttt{a \&\&= b}, \texttt{a ||= b}} & \makecell[X]{Assegnamento e modifica}
+\end{xltabular}
+
+Tra questi operatori molti sono intuitivi e simili a quelli di altri linguaggi di programmazione, merita per\`o particolare attenzione l'operatore di \emph{casting}, \texttt{as}. Il casting \`e la conversione di un valore da un tipo a un altro. Nella tabella sopra il valore \texttt{a} viene convertito nel tipo \texttt{T}.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var a = 2;
+var b = a++;
+var c = (1 << (a * b)) as u64; // Sarà uguale a 64 memorizzato come un u64
+	\end{minted}
+	\caption{Alcuni esempi di espressioni in BugginOut}
+	\label{fig:expressions-example}
+\end{figure}
+
+\subsection{Blocchi}
+
+Un \emph{blocco} \`e una sequenza d'istruzioni racchiuse tra parentesi graffe. I blocchi sono utilizzati per raggruppare istruzioni e definire un ambito di visibilit\`a per le variabili dichiarate al loro interno.
+
+I blocchi possono restituire un valore ed essere, quindi, usati come espressioni.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var c = {
+  var a = 10;
+  var b = 20;
+  a + b
+} // `c` sarà uguale a 30
+
+// NOTA: Provare ad accedere `a` o `b` qui darà errore
+//       poiché sono fuori dal blocco
+	\end{minted}
+	\caption{Un blocco in BugginOut}
+	\label{fig:block-example}
+\end{figure}
+
+\subsection{Condizioni}
+
+Una \emph{condizione}\footnote{Verr\`a spesso chiamata espressione \texttt{if}} consente l'esecuzione condizionata di un blocco in base al valore di verit\`a di un'espressione booleana. \`E possibile specificare un ramo alternativo con \texttt{else}, che verr\`a eseguito nel caso in cui la condizione sia falsa.
+
+Le condizioni, come i blocchi, possono restituire un valore ed essere usate come espressioni.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var c = if (a > b) { a } else { b };
+// `c` sarà uguale al valore maggiore tra `a` e `b`
+	\end{minted}
+	\caption{Una condizione in BugginOut}
+	\label{fig:condition-example}
+\end{figure}
+
+\`E possibile concatenare pi\`u condizioni facendo seguire un'altra \texttt{if} alla parola chiave \texttt{else}.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+if (a > b) {
+  println("a maggiore di b");
+} else if (a < b) {
+  println("a minore di b");
+} else {
+  println("a uguale a b");
+}
+	\end{minted}
+	\caption{Una condizione concatenata in BugginOut}
+	\label{fig:chained-condition-example}
+\end{figure}
+
+\subsection{Cicli}
+
+Un \emph{ciclo} \`e un costrutto che permette l'iterazione di un blocco d'istruzioni fino a quando una condizione \`e vera. Nel caso di BugginOut, ne esistono tre e sono tutti denotati dalla parola chiave \texttt{for}.
+
+Il primo tipo \`e il pi\`u semplice e itera all'infinito a meno che non venga interrotto da un'istruzione \texttt{break} o da un \texttt{return}.
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+for {
+  println("Questo ciclo non terminerà mai");
+}
+	\end{minted}
+	\caption{Un ciclo infinito in BugginOut}
+	\label{fig:infinite-for-example}
+\end{figure}
+
+Il secondo tipo consente d'iterare fino a quando una condizione \`e vera:
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var i = 0;
+for (i < 10) {
+  println(i);
+  ++i;
+}
+	\end{minted}
+	\caption{Un ciclo con condizione in BugginOut}
+	\label{fig:for-with-condition-example}
+\end{figure}
+
+Il terzo e ultimo tipo consente d'iterare su una sequenza di valori, come un array, uno slice o un range.
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+for (i in 0..<10) {
+  println(i);
+}
+	\end{minted}
+	\caption{Un ciclo su un range in BugginOut (il comportamento \`e lo stesso dell'esempio \ref{fig:for-with-condition-example})}
+	\label{fig:for-range-example}
+\end{figure}
+
+All'interno di un ciclo \`e possibile utilizzare due istruzioni speciali: \texttt{continue} e \texttt{break}. L'istruzione \texttt{continue} salta l'iterazione corrente e passa alla successiva, mentre \texttt{break} termina il ciclo immediatamente.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+for (i in 0..<10) {
+  if (i == 5) {
+    continue; // Salta l'iterazione quando i è uguale a 5
+  }
+
+  if (i == 8) {
+    break; // Termina il ciclo quando i è uguale a 8
+  }
+  println(i);
+}
+	\end{minted}
+	\caption{Un ciclo con \texttt{continue} e \texttt{break} in BugginOut}
+	\label{fig:for-continue-break-example}
+\end{figure}
+
+\subsection{Funzioni}
+\label{ssec:funzioni}
+
+Le \emph{funzioni} rappresentano il principale meccanismo di astrazione e riuso del codice. Una dichiarazione di funzione \`e formata dalle seguenti parti:
+\begin{itemize}
+	\item il \emph{nome} della funzione, preceduto dalla parola chiave \texttt{fn}\footnote{Il nome della funzione segue le stesse regole per i nomi delle variabili.};
+	\item il \emph{parametri} della funzione, racchiusi tra parentesi;
+	\item il \emph{tipo di ritorno} della funzione, preceduto da due punti;
+	\item il \emph{corpo} della funzione.
+\end{itemize}
+
+Ogni parametro della funzione \`e composto dal nome seguito da due punti e il suo tipo. Eventualmente possono essere preceduti dalle seguenti parole chiavi: \texttt{anon} e \texttt{mut}. La prima specifica che il parametro \`e \emph{anonimo} ovvero che, quando richiamata, il nome del parametro non deve essere specificato. La seconda, invece, specifica che il parametro \`e \emph{mutabile} e pu\`o essere modificato all'interno della funzione.
+
+Il corpo della funzione pu\`o restituire un valore tramite l'istruzione \texttt{return} e, inoltre, se esso termina con un'espressione, questa viene restituita senza il bisogno di specificare la parola chiave \texttt{return}.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+fn add(anon a: u32, anon b: u32): u32 { a + b }
+
+fn find(haystack: []i32, needle: i32): isize {
+  for (i in 0..<haystack.size) {
+    if (haystack[i] == needle) {
+      return i as isize;
+    }
+  }
+
+  -1
+}
+	\end{minted}
+	\caption{Dichiarazioni di funzioni in BugginOut}
+	\label{fig:function-declaration-example}
+\end{figure}
+
+Per richiamare una funzione, si utilizza il suo nome seguito da parentesi contenenti gli argomenti. Ogni parametro non anonimo deve essere specificato con il suo nome, a meno che il suo valore non sia specificato con una variabile il cui nome corrisponda con il nome dell'argomento.
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var c = add(1, 2);
+// Essendo `a` e `b` anonimi non hanno bisogno del nome
+
+var index_1 = find(haystack: [1, 2, 3], needle: 2);
+// `haystack` e `needle` devono essere specificati
+
+var haystack = [1, 2, 3, 4, 5];
+var index_2 = find(haystack, needle: 3);
+// `haystack` può essere specificato con il nome della variabile
+	\end{minted}
+	\caption{Chiamate di funzioni in BugginOut (fa riferimento all'esempio \ref{fig:function-declaration-example})}
+	\label{fig:function-call-example}
+\end{figure}
+
+\subsection{Input e output}
+\label{ssec:input-e-output}
+
+Il linguaggio fornisce le seguenti funzioni \textit{builtin} l'input e l'output da terminale:
+\begin{itemize}
+	\item \texttt{print}: stampa la rappresentazione testuale di un valore senza ritorno a capo;
+	\item \texttt{println}: stampa la rappresentazione testuale di un valore con ritorno a capo;
+	\item \texttt{readln}: legge una riga da terminale e la restituisce come una stringa;
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\begin{minted}[breaklines,frame=lines,fontsize=\footnotesize]{text}
+var name = readln();
+print("Ciao, ");
+println(name);
+	\end{minted}
+	\caption{Input e output in BugginOut}
+	\label{fig:input-output-example}
+\end{figure}
