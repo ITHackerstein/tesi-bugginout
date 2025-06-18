@@ -2,3 +2,274 @@
 
 \chapter{Alcuni esempi}
 \label{chap:alcuni-esempi}
+
+In questo capitolo, si vedono alcuni esempi di codice scritti in BugginOut, che mostrano le caratteristiche del linguaggio e le sue funzionalità principali.
+
+\mdfdefinestyle{examplestyle}{
+	skipabove=0pt,
+	innertopmargin=0pt,
+	leftmargin=0pt,
+	innerleftmargin=0pt,
+	skipbelow=0pt,
+	innerbottommargin=0pt,
+	rightmargin=0pt,
+	innerrightmargin=0pt,
+	linewidth=0pt
+}
+
+\section*{\textit{Hello World}}
+
+\hfill
+
+\begin{mdframed}[style=examplestyle]
+	\begin{minted}[breaklines,frame=lines,linenos,fontsize=\footnotesize]{text}
+fn main(): void {
+  println("Hello, World!");
+}
+	\end{minted}
+\end{mdframed}
+
+\section*{Fibonacci}
+
+\hfill
+
+\begin{mdframed}[style=examplestyle]
+	\begin{minted}[breaklines,frame=lines,linenos,fontsize=\footnotesize]{text}
+fn main(): void {
+  mut a = 0;
+  mut b = 1;
+
+  for (b < 1000) {
+    println(b);
+
+    var c = a + b;
+    a = b;
+    b = c;
+  }
+}
+	\end{minted}
+\end{mdframed}
+
+\section*{Fattoriale}
+
+\hfill
+
+\begin{mdframed}[style=examplestyle]
+	\begin{minted}[breaklines,frame=lines,linenos,fontsize=\footnotesize]{text}
+fn factorial(anon n: u64): u64 {
+  if (n == 0) {
+    1_u64
+  } else {
+    n * factorial(n - 1)
+  }
+}
+
+fn main(): void {
+  for (i in 0..<10_u64) {
+    print(i);
+    print("! = ");
+    println(factorial(i));
+  }
+}
+	\end{minted}
+\end{mdframed}
+
+\section*{Ricerca binaria}
+
+\hfill
+
+\begin{mdframed}[style=examplestyle]
+	\begin{minted}[breaklines,frame=lines,linenos,fontsize=\footnotesize]{text}
+fn binary_search(array: []i32, element: i32): isize {
+  mut low = 0_usize;
+  mut high = array.size - 1;
+  for (low <= high) {
+    mut mid = low + (high - low) / 2;
+    if (array[mid] == element) {
+      return mid as isize;
+    } else if (array[mid] < element) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  -1
+}
+
+fn main(): void {
+  var array = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  var index = binary_search(array, element: 5);
+
+  if (index >= 0) {
+    print("Element found at index: ");
+    println(index);
+  } else {
+    println("Element not found in the array");
+  }
+}
+	\end{minted}
+\end{mdframed}
+
+\section*{Ordinamento}
+
+\hfill
+
+\begin{mdframed}[style=examplestyle]
+	\begin{minted}[breaklines,frame=lines,linenos,fontsize=\footnotesize]{text}
+fn bubble_sort(anon array: []mut i32): void {
+  for (i in 0..<array.size - 1) {
+    for (j in i + 1..<array.size) {
+      var tmp = array[i];
+      array[i] = array[j];
+      array[j] = tmp;
+    }
+  }
+}
+
+fn quick_sort_helper(anon array: []mut i32, anon low: usize, anon high: usize): void {
+  var size = high - low;
+  if (size < 2) {
+    return;
+  }
+
+  var pivot = array[low + size / 2];
+  mut i = low;
+  mut j = high - 1;
+  for {
+    for (array[i] < pivot) { ++i; }
+    for (array[j] > pivot) { --j; }
+
+    if (i >= j) {
+      break;
+    }
+
+    var tmp = array[i];
+    array[i] = array[j];
+    array[j] = tmp;
+  }
+
+  quick_sort_helper(array, low, i);
+  quick_sort_helper(array, i, high);
+}
+
+fn quick_sort(anon array: []mut i32): void { quick_sort_helper(array, 0_usize, array.size); }
+
+fn print_array(anon array: []i32): void {
+  print('[');
+  for (i in 0..<array.size) {
+    print(array[i]);
+    if (i != array.size - 1) {
+      print(", ");
+    }
+  }
+  println(']');
+}
+
+fn main(): void {
+  var array = [5, 4, 3, 2, 1];
+  print("Original array: ");
+  print_array(array);
+
+  {
+    mut array_copy = array;
+    bubble_sort(array_copy);
+    print("After bubble sort: ");
+    print_array(array_copy);
+  }
+
+  {
+    mut array_copy = array;
+    quick_sort(array_copy);
+    print("After quick sort: ");
+    print_array(array_copy);
+  }
+}
+	\end{minted}
+\end{mdframed}
+
+\section*{Risoluzione del Sudoku con DFS + backtracking}
+
+\hfill
+
+\begin{mdframed}[style=examplestyle]
+	\begin{minted}[breaklines,frame=lines,linenos,fontsize=\footnotesize]{text}
+fn is_valid_after_move(board: []u8, row: usize, column: usize): bool {
+  for (i in 0..<9_usize) {
+    if (i != column && board[row * 9 + i] == board[row * 9 + column]) {
+      return false;
+    }
+
+    if (i != row && board[i * 9 + column] == board[row * 9 + column]) {
+      return false;
+    }
+  }
+
+  var block_row = (row / 3) * 3;
+  var block_column = (column / 3) * 3;
+  for (i in 0..<3_usize) {
+    for (j in 0..<3_usize) {
+      if (block_row + i != row && block_column + j != column && board[(block_row + i) * 9 + (block_column + j)] == board[row * 9 + column]) {
+        return false;
+      }
+    }
+  }
+
+  true
+}
+
+fn solve(board: []mut u8): bool {
+  for (row in 0..<9_usize) {
+    for (column in 0..<9_usize) {
+      if (board[row * 9 + column] != 0) {
+        continue;
+      }
+
+      for (num in 1..=9_u8) {
+        board[row * 9 + column] = num;
+        if (is_valid_after_move(board, row, column) && solve(board)) {
+          return true;
+        }
+        board[row * 9 + column] = 0_u8;
+      }
+
+      return false;
+    }
+  }
+
+  true
+}
+
+fn main(): void {
+  mut board = [
+    0_u8, 0_u8, 0_u8, 2_u8, 6_u8, 0_u8, 7_u8, 0_u8, 1_u8,
+    6_u8, 8_u8, 0_u8, 0_u8, 7_u8, 0_u8, 0_u8, 9_u8, 0_u8,
+    1_u8, 9_u8, 0_u8, 0_u8, 0_u8, 4_u8, 5_u8, 0_u8, 0_u8,
+    8_u8, 2_u8, 0_u8, 1_u8, 0_u8, 0_u8, 0_u8, 4_u8, 0_u8,
+    0_u8, 0_u8, 4_u8, 6_u8, 0_u8, 2_u8, 9_u8, 0_u8, 0_u8,
+    0_u8, 5_u8, 0_u8, 0_u8, 0_u8, 3_u8, 0_u8, 2_u8, 8_u8,
+    0_u8, 0_u8, 9_u8, 3_u8, 0_u8, 0_u8, 0_u8, 7_u8, 4_u8,
+    0_u8, 4_u8, 0_u8, 0_u8, 5_u8, 0_u8, 0_u8, 3_u8, 6_u8,
+    7_u8, 0_u8, 3_u8, 0_u8, 1_u8, 8_u8, 0_u8, 0_u8, 0_u8
+  ];
+
+  if (solve(board)) {
+    println("Solved Sudoku:");
+    for (row in 0..<9) {
+      for (column in 0..<9) {
+        if (board[row * 9 + column] == 0) {
+          print('.');
+        } else {
+          print(board[row * 9 + column]);
+        }
+        print(" ");
+      }
+      print("\n");
+    }
+  } else {
+    println("No solution exists");
+  }
+}
+	\end{minted}
+\end{mdframed}
+
