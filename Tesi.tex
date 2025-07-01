@@ -1,7 +1,7 @@
 %! TeX program = lualatex
 
 % NOTE: Use twoside for the final print and oneside for the digital version
-\documentclass[a4paper,oneside,12pt]{report}
+\documentclass[a4paper,twoside,12pt]{report}
 \usepackage[italian]{babel}
 \usepackage{graphicx}
 \usepackage{tikz}
@@ -59,28 +59,37 @@
 		\end{tikzpicture}
 	\end{titlepage}
 
-	\cleardoublepage
-
 	\pagenumbering{roman}
 	\addcontentsline{toc}{chapter}{Abstract}
 	\include{Abstract}
 	\cleardoublepage
 	\addcontentsline{toc}{chapter}{Indice}
 	\tableofcontents
-	\cleardoublepage
 
+	\cleardoublepage
 	\pagenumbering{arabic}
 	\setcounter{page}{1}
 
 	\addcontentsline{toc}{chapter}{Introduzione}
 	\include{Introduzione}
+
+	\cleardoublepage
 	\include{Flusso_di_compilazione}
+
+	\cleardoublepage
 	\include{Architettura_del_compilatore}
+
+	\cleardoublepage
 	\include{Design_del_linguaggio}
+
+	\cleardoublepage
 	\include{Alcuni_esempi}
+
+	\cleardoublepage
 	\addcontentsline{toc}{chapter}{Conclusioni}
 	\include{Conclusioni}
 
+	\cleardoublepage
 	\addcontentsline{toc}{chapter}{Bibliografia}
 	\bibliographystyle{plain}
 	\bibliography{Bibliography}
